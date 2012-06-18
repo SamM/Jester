@@ -633,7 +633,7 @@ function basicPlugins(){
 			return 'BDS:BOTCHECK:RESPONSE:'+[from,bot.owner,bot.userAgent.split(" ").join(","),md5((bot.trigger+from+bot.owner).toLowerCase()),bot.trigger].join(",");
 		}
 		this.preprocess('recv:msg', function(o,d){ 
-			if(new RegExp(this.username+"(: |:)botcheck", "i").test(o.text)) {
+			if(new RegExp(this.username+"(: |:)botcheck", "gi").test(o.text)) {
 				var msg = opt.reply+'<abbr title="'+["botresponse:",o.from,this.owner,this.userAgent,md5((this.trigger+o.from+this.owner).toLowerCase()), this.trigger].join(" ")+'"></abbr>';
 				this.send.msg(o.channel, msg);
 			}
@@ -669,6 +669,6 @@ function dAmnBot(u,p,o,t){
 module.exports = dAmnBot;
 /*
 var yourbot = Jester("botusername","botpassword","botownerusername","???");
-yourbot.default_channels.push("chat:Botdom", "chat:YourChannel");
+yourbot.autojoin("Botdom", "#YourChannel", "chat:AnotherChannel");
 yourbot.run();
 */
