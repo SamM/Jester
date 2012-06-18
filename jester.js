@@ -630,11 +630,11 @@ function basicCommands(){
 function basicPlugins(){
 	this.plugin('botcheck', {reply: 'I\'m a bot'}, function(bot,opt){
 		function botcheckResponse(from){
-			return 'BDS:BOTCHECK:RESPONSE:'+[from,bot.owner,bot.userAgent.split(" ").join(","),md5((bot.trigger+from+bot.username).toLowerCase()),bot.trigger].join(",");
+			return 'BDS:BOTCHECK:RESPONSE:'+[from,bot.owner,bot.userAgent.split(" ").join(",")+"/0.2",md5((bot.trigger+from+bot.username).toLowerCase()),bot.trigger].join(",");
 		}
 		this.preprocess('recv:msg', function(o,d){ 
 			if(new RegExp(this.username+"(: |:)botcheck", "gi").test(o.text)) {
-				var msg = opt.reply+'<abbr title="'+["botresponse:",o.from,this.owner,this.userAgent,md5((this.trigger+o.from+this.username).toLowerCase()), this.trigger].join(" ")+'"></abbr>';
+				var msg = opt.reply+'<abbr title="'+["botresponse:",o.from,this.owner,this.userAgent+"/0.2",md5((this.trigger+o.from+this.username).toLowerCase()), this.trigger].join(" ")+'"></abbr>';
 				this.send.msg(o.channel, msg);
 			}
 			if(o.channel == 'chat:DataShare'){
