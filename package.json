@@ -1,0 +1,8 @@
+{
+	name: "Jester",
+	version: "0.1",
+	main: "./jester",
+	dependencies: {
+		"MD5": "0.0.0"
+	}
+}
