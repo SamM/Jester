@@ -9,7 +9,15 @@ String.prototype.sj=function(s,j){return this.split(s).join(j);};
 var UserAgent = "Jester 0.1";
 var Jester = function(username,password,owner,trigger){
 	function ns_(ns){ ns = ns.sj("#","chat:"); return ns.indexOf("chat:")<0?"chat:"+ns:ns; }
-	function _ns(ns){ return ns.sj("pchat:","@").sj("chat:","#"); }
+	function _ns(ns){
+		if(ns.indexOf("pchat:")==0){
+			ns = ns.slice(6).split(":");
+			if(ns.length==1) ns = ns[0];
+			else ns = ns[0].toLowerCase()==BOT.username.toLowerCase()?ns[1]:ns[0];
+			ns = "pchat:"+ns;
+		}
+		return ns.sj("pchat:","@").sj("chat:","#");
+	}
 	var BOT = {
 		userAgent: "Jester 0.1",
 		startTime: 0,
@@ -22,6 +30,22 @@ var Jester = function(username,password,owner,trigger){
 		connection: null,
 		formatNS: ns_,
 		simpleNS: _ns,
+		formatChatNS: function(ns){
+			if(!ns || !ns.length) return null;
+			if(ns[0]=="@") ns=ns.slice(1);
+			if(ns.indexOf("pchat:")==0){
+				ns = ns.slice(6).split(":");
+				if(ns.length>1){
+					if(ns[0].toLowerCase() == this.username.toLowerCase()) ns = ns[1];
+					else if(ns[1].toLowerCase() == this.username.toLowerCase()) ns = ns[0];
+					else return null;
+				}else{
+					ns=ns[0];
+				}
+			}
+			return "pchat:"+[this.username,ns].sort().join(":");
+			
+		},
 		plugins: {},
 		plugin: function(id, data, fn){
 			if(typeof id == 'function'){
@@ -61,7 +85,7 @@ var Jester = function(username,password,owner,trigger){
 					process.call(self, o, Array.isArray(post)?postprocessing:new Function)
 				}
 				function postprocessing(o){
-					if(!post || i<post.length) {
+					if(Array.isArray(post) && i<post.length) {
 						try{
 							post[i++].call(self, o, postprocessing);
 						}catch(ex){
@@ -101,7 +125,7 @@ var Jester = function(username,password,owner,trigger){
 			return this;
 		},
 		logMsg: function(channel, str){ 
-			this.process('logMsg', {'channel': channel, 'text': str}, function(o,d){ console.log("["+_ns(o.channel)+"] "+o.text); d(o) } )
+			this.process('logMsg', {'channel': channel, 'text': str}, function(o,d){ this.log("["+_ns(o.channel)+"] "+o.text); d(o) } )
 			return this;
 		},
 		run: function(){
@@ -208,17 +232,17 @@ var Jester = function(username,password,owner,trigger){
 			this.default_channels.push.apply(this.default_channels, [].slice.call(arguments));
 			return this;
 		},
-		chunk: false,
+		chunk: "",
 		read: function(pkt){
-			pkt = pkt.toString();
-			if(!pkt.indexOf("\u0000")){
-				this.chunk = pkt;
+			pkt = pkt.toString().replace(/\0/g,"\u0000").replace(/\r/g,"\u0000");
+			if(false && pkt.indexOf("\u0000")<0){
+				this.chunk = this.chunk + pkt;
 				return;
-			}else if(this.chunk){
-				pkt = this.chunk + pkt;
-				chunk = false;
 			}
-			
+			if(this.chunk.length){
+				pkt = this.chunk + pkt;
+				chunk = "";
+			}
 			var pkts = pkt.split("\u0000");
 			for(var i=0;i<pkts.length;i++)
 				this.read_pkt(pkts[i]);
@@ -228,7 +252,8 @@ var Jester = function(username,password,owner,trigger){
 			pkt = pkt.split("\n");
 			if(!pkt.length) return;
 			var cmd = pkt[0].split(" ")[0] || "",
-				param = pkt[0].split(" ")[1] || "";
+				param = pkt[0].split(" ")[1] || "",
+				value = pkt[5]||"";
 			DEBUG && BOT.log([BOT.username,"READ",pkt.join("\\n")].join("<"));
 			switch(cmd){
 				case "dAmnServer":
@@ -248,15 +273,34 @@ var Jester = function(username,password,owner,trigger){
 					break;
 				case "join":
 					var e = (pkt[1]||"").split("=")[1] || "";
-					if(e!="ok") BOT.log(BOT.username+">ERROR>Could not join "+_ns(param)+": "+e);
+					if(e!="ok") BOT.log(BOT.username+">Error: Could not join "+param+": "+e);
 					else this.channel_joined(param);
 					break;
 				case "part":
 					var e = (pkt[1]||"").split("=")[1] || "";
-					if(e!="ok") BOT.log(BOT.username+">ERROR>Could not part "+_ns(param)+": "+e);
+					if(e!="ok") BOT.log(BOT.username+">ERROR: Could not part "+_ns(param)+": "+e);
 					else this.channel_parted(param);
 					break;
 				case "property":
+					var prop = (pkt[1] || "").split("=")[1] || "";
+					(function(){
+						switch(prop){
+						case "topic":
+						case "title":
+							if(pkt.length>6) value = pkt.slice(6).join("");
+							this['channel_'+prop](param, value);
+						break;
+						case "members":
+						case "privclasses":
+							this['channel_'+prop](param, pkt.slice(3));
+						break;
+						default:
+							if(prop.indexOf("login:")==0){
+								this.channel_whois(param, prop.slice(6), value);
+							}
+						break;
+						}
+					}).call(this);
 					break;
 				case "kicked":
 					var by = (pkt[1]||"").split("=")[1] || "";
@@ -268,12 +312,77 @@ var Jester = function(username,password,owner,trigger){
 					this.recv.pkt(pkt)
 					break;
 				case "disconnect":
+					this.disconnect();
 					break;
 			}
 		},
+		channel_create: function(ns){
+			ns = this.formatNS(ns);
+			this.channels[ns.toLowerCase()] = this.channels[ns.toLowerCase()] || { 'ns': ns, members: {}, topic: "", title: "", privclasses: {} };
+		},
+		channel_topic: function(ns, text){
+			this.process('topic', {channel: this.formatNS(ns), 'text': this.formatMsg(text)}, function(o,d){
+				this.log("*** Topic of "+this.simpleNS(o.channel)+": "+o.text);
+				this.channel_create(o.channel);
+				this.channels[o.channel.toLowerCase()].topic = o.text;
+				d(o);
+			});
+		},
+		channel_title: function(ns, text){
+			this.process('title', {channel: this.formatNS(ns), 'text': this.formatMsg(text)}, function(o,d){
+				this.log("*** Title of "+this.simpleNS(o.channel)+": "+o.text);
+				this.channel_create(o.channel);
+				this.channels[o.channel.toLowerCase()].title = o.text;
+				d(o);
+			});
+		},
+		channel_members: function(ns, list){
+			var members = {},
+				member;
+			for(var i=0,line;i<list.length;i++){
+				line = list[i];
+				if(!line.length) member = undefined;
+				else if(line.indexOf('member ')==0){
+					member = line.split(" ")[1].toLowerCase();
+					members[member] = { username: line.split(" ")[1] };
+				}else if(line.indexOf('=')>-1 && member){
+					pair = line.split("=");
+					members[member][pair[0]] = pair[1];
+				}
+			}
+			this.process('members', {channel: this.formatNS(ns), 'list': list, 'members': members}, function(o,d){
+				var list = [],mem;
+				for(var i in o.members){
+					mem = o.members[i];
+					list.push(mem.symbol+mem.username+"("+mem.pc+")")
+				}
+				this.log("*** Members of "+this.simpleNS(o.channel)+": "+list.join(" "));
+				this.channel_create(o.channel);
+				this.channels[o.channel.toLowerCase()].members = o.members;
+				d(o);
+			});
+		},
+		channel_privclasses: function(ns, list){
+			var privclasses = {};
+			for(var i=0,pair;i<list.length;i++){
+				if(!list[i] || !list[i].length) continue;
+				pair = list[i].split(":");
+				privclasses[pair[1]] = pair[0];
+			}
+			this.process('privclasses', {channel: this.formatNS(ns), 'list': list, 'privclasses': privclasses}, function(o,d){
+				this.log("*** Privclasses of "+this.simpleNS(o.channel)+": "+o.list.join(", "));
+				this.channel_create(o.channel);
+				this.channels[o.channel.toLowerCase()].privclasses = o.privclasses;
+				d(o);
+			});
+		},
+		channel_whois: function(ns, text){
+			
+		},
 		channel_joined: function(ns){
 			this.process('join', {channel: ns_(ns)}, function(o,d){
-				this.log("*** "+BOT.username+" has joined "+_ns(ns)+" *");
+				this.log("*** "+BOT.username+" has joined "+o.channel+" *");
+				this.channel_create(o.channel);
 				d(o);
 			})
 		},
@@ -386,6 +495,7 @@ var Jester = function(username,password,owner,trigger){
 			});
 		},
 		formatMsg: function(msg){
+			try{
 	        // bold
 				msg = msg.replace(/&b\t/g,	"<b>" );
 				msg = msg.replace(/&\/b\t/g,"</b>");
@@ -449,7 +559,7 @@ var Jester = function(username,password,owner,trigger){
 	        	msg = msg.replace(/&iframe\t([^\t]+)\t([^\t]*)\t([^\t]*)\t/g,'<iframe href="$1" height="$2" width="$3" />');
 	        // thumbnail
 				msg = msg.replace(/&thumb\t([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)\t([^\t]+)\t/g,':thumb$1:');
-				
+			}catch(ex){}	
 			return msg;
 		},
 		send: {
@@ -472,7 +582,16 @@ var Jester = function(username,password,owner,trigger){
 				return BOT;
 			},
 			join: function(ns){
+				if(ns[0]=="@" || ns.slice(0,6)=="pchat:") return this.chat(ns);
+
 				BOT.process('send:join', {'channel': BOT.formatNS(ns)}, function(o,d){
+					this.send.pkt("join "+o.channel, ''); d(o)
+				})
+			},
+			chat: function(ns){
+				if(!ns) return;
+				if(ns[0]=="#" || ns.slice(0,5)=="chat:") return this.join(ns);
+				BOT.process('send:chat', {'channel': BOT.formatChatNS(ns)}, function(o,d){
 					this.send.pkt("join "+o.channel, ''); d(o)
 				})
 			},
@@ -564,9 +683,10 @@ function basicCommands(){
 	
 	// Join
 	function botJoin(o,d){
+		var bot = this;
 		if(this.checkAuth(o.from, 2)){
 			o.params.forEach(function(chan){
-				BOT.send.join(chan);
+				bot.send.join(chan);
 			});
 		}else{
 			this.send.msg_to(o.channel, o.from, 'You do not have permission to use the command '+o.cmd);
@@ -574,6 +694,13 @@ function basicCommands(){
 		o.handled++; d(o);
 	}
 	this.preprocess('command:join', botJoin);
+	
+	// Chat
+	function botChat(o,d){
+		this.send.chat(o.from);
+		o.handled++; d(o);
+	}
+	this.preprocess('command:chat', botChat);
 	
 	// Quit
 	function botQuit(o,d){
@@ -589,9 +716,10 @@ function basicCommands(){
 	
 	// Part
 	function botPart(o,d){
+		var bot = this;
 		if(this.checkAuth(o.from, 2)){
 			o.params.forEach(function(chan){
-				BOT.send.part(chan);
+				bot.send.part(chan);
 			});
 		}else{
 			this.send.msg_to(o.channel, o.from, 'You do not have permission to use the command '+o.cmd);
@@ -604,7 +732,7 @@ function basicCommands(){
 	function botKick(o,d){
 		if(this.checkAuth(o.from, 3)){
 			if(o.params.length) 
-				BOT.send.kick(o.channel,o.params.shift(),o.params.join(" "));
+				this.send.kick(o.channel,o.params.shift(),o.params.join(" "));
 		}else{
 			this.send.msg_to(o.channel, o.from, 'You do not have permission to use the command '+o.cmd);
 		}
