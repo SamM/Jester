@@ -9,7 +9,7 @@ var handlebars = require("express-handlebars");
 var BOT = new Jester();
 BOT.autojoin("sumobot", "Botdom");
 BOT.set("owner", "sumopiggy");
-BOT.set("trigger", "``");
+BOT.set("trigger", "?");
 BOT.DEBUG = false;
 
 app.engine("handlebars", handlebars({
@@ -37,7 +37,7 @@ app.get('/', function (req, res) {
 });
 
 io.on('connection', function (socket) {
-  require("./plugins/websocket_connection").call(BOT, socket);
+  require("./bot_events").call(BOT, socket);
 });
 
 

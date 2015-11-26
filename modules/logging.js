@@ -8,7 +8,7 @@ module.exports = function(){
   };
   this.logMsg = function(channel, str){
     this.process('logMsg', {'channel': channel, 'text': str}, function(o,d){
-      this.log("["+_ns(o.channel)+"] "+o.text);
+      this.log("["+this.simpleNS(o.channel)+"] "+o.text);
       d(o);
     })
     return this;

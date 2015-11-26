@@ -17,7 +17,11 @@ module.exports = function(socket){
     "join",
     "part",
     "set",
-    ""
+    "channel_create",
+    "recv:msg",
+    "command",
+    "recv:join",
+    "recv:part"
   ];
 
   //

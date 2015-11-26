@@ -1,7 +1,6 @@
 var http = require('http'),
 	https = require('https'),
-	net = require('net'),
-	md5 = require('MD5');
+	net = require('net');
 
 module.exports = function(){
   var BOT = this;
@@ -80,11 +79,13 @@ module.exports = function(){
     if(!pkt.length) return;
     var data = this.format_data(pkt);
 		BOT.events.emit("read_pkt", data);
+		var cmd = data.command;
     var param = data.param;
     var body = data.body;
     var args = data.args;
+		BOT.DEBUG && BOT.log(data);
     BOT.DEBUG && BOT.log([BOT.get("username"),"READ",data.raw].join("<"));
-    switch(data.command){
+    switch(cmd){
       case "dAmnServer":
         BOT.log("*** Connection to dAmn "+param+" established ***");
 				BOT.events.emit("connected", param);
@@ -243,36 +244,44 @@ module.exports = function(){
     })
   };
   this.recv = {
-    pkt: function(pkt){
-			BOT.events.emit("recv:pkt", {pkt: pkt});
-      if(!pkt.length){ return; }
-      var ns = (pkt[0]||"").split(" ")[1] || "",
-        cmd = (pkt[2]||"").split(" ")[0] || "",
-        param = (pkt[2]||"").split(" ")[1] || "";
+    pkt: function(data){
+			BOT.events.emit("recv:pkt", {pkt: data});
+      var ns = data.param,
+				body = data.body,
+				chunks = body.split("\n"),
+        cmd = chunks[0].split(" ")[0],
+				param = chunks[0].split(" ")[1];
+
+			var args = {};
+			chunks.slice(1).forEach(function(chunk){
+				if(chunk.indexOf("=")>-1){
+					chunk = chunk.split("=");
+					args[chunk[0]] = chunk[1];
+				}
+			});
 
       BOT.DEBUG && BOT.log([BOT.get("username"),"RECV",ns,cmd,param].join("<"));
 
       switch(cmd){
         case "msg":
         case "action":
-          var from = (pkt[3]||"").split("=")[1] || "";
-          (cmd=="msg"?BOT.recv.msg:BOT.recv.action)(ns,from,pkt[5]||"");
+          var from = chunks[1].split("=")[1] || "";
+          (cmd=="msg"?BOT.recv.msg:BOT.recv.action)(ns,from,chunks[3]||"");
           break;
         case "join":
-        case "part":
-          (cmd=="join"?BOT.recv.join:BOT.recv.part)(ns,param);
+          BOT.recv.join(ns,param,args);
+          break;
+				case "part":
+          BOT.recv.part(ns,param,args);
           break;
         case "privchg":
-          var by = (pkt[3]||"").split("=")[1] || "",
-            pc = (pkt[4]||"").split("=")[1] || "";
-          BOT.recv.privchg(ns,param,by,pc);
+          BOT.recv.privchg(ns,param,args);
           break;
         case "kicked":
-          var by = (pkt[3]||"").split("=")[1] || "";
-          BOT.recv.kicked(ns,param,by,pkt[5]);
+          BOT.recv.kicked(ns,param,args.by,chunks.pop());
           break;
         case "default":
-          log(BOT.get("username")+"<RECV<ERROR<UNKNOWNCMD<"+cmd)
+          BOT.log(BOT.get("username")+"<RECV<ERROR<UNKNOWN_RECV<"+cmd)
       }
     },
     msg: function(ns,from,content){
@@ -295,14 +304,14 @@ module.exports = function(){
         BOT.logMsg(o.channel, "* "+o.from+" "+o.text);
       });
     },
-    join: function(ns, user){
-      BOT.process('recv:join', {channel: ns, 'user': user},
+    join: function(ns, user, args){
+      BOT.process('recv:join', {channel: ns, 'user': user, args: args},
       function(o,d){
         BOT.logMsg(o.channel, "** "+o.user+" has joined");
       });
     },
-    part: function(ns, user){
-      BOT.process('recv:part', {channel: ns, 'user': user},
+    part: function(ns, user, args){
+      BOT.process('recv:part', {channel: ns, 'user': user, args: args},
       function(o,d){
         BOT.logMsg(o.channel, "** "+o.user+" has left");
       });
@@ -313,10 +322,10 @@ module.exports = function(){
         BOT.logMsg(o.channel, "** "+o.user+" was kicked by "+o.by+" * "+o.reason);
       });
     },
-    privchg: function(ns, user, by, privclass){
-      BOT.process('recv:privchg', {channel: ns, 'user': user, 'by': by, 'privclass': privclass},
+    privchg: function(ns, user, args){
+      BOT.process('recv:privchg', {channel: ns, 'user': user, args: args},
       function(o,d){
-        BOT.logMsg(o.channel, "** "+o.user+" was promoted to "+o.privclass+" by "+o.by+" *");
+        BOT.logMsg(o.channel, "** "+o.user+" was promoted to "+o.args.pc+" by "+o.args.by+" *");
       });
     }
   };

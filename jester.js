@@ -17,19 +17,36 @@ function Jester(){
     "autojoin"
   ];
 
+  var plugins = [
+    "basic_commands"
+    , "antikick"
+    //, "botcheck"
+  ];
+
   //
   // Add Event Handling
   //
   BOT.events = new EventEmitter();
 
+  BOT.loadModule = function(path){
+    try{
+      BOT.events.emit("load_module", {path: path});
+      require(path).call(BOT);
+    } catch(ex){ console.log("Error loading bot module '"+mod+"': "+ex); }
+  }
+
   //
   // Load Modules
   //
   modules.forEach(function(mod){
-    try{
-      require("./modules/"+mod).call(BOT);
-      BOT.events.emit("load_module", mod);
-    } catch(ex){ console.log("Error loading bot module '"+mod+"': "+ex); }
+    BOT.loadModule("./modules/"+mod);
+  });
+
+  //
+  // Load Plugins
+  //
+  plugins.forEach(function(plugin){
+    BOT.loadModule("./plugins/"+plugin);
   });
 
   //
@@ -37,11 +54,11 @@ function Jester(){
   //
   BOT.set("version", version);
   BOT.set("useragent", "Jester "+version);
-  BOT.set("trigger", "``");
-  BOT.set("owner", "sumopiggy")
+  BOT.set("trigger", "?");
+  BOT.set("owner", "UNKNOWN");
   BOT.set("username", "UNKNOWN");
 
-  this.run = function(){
+  BOT.run = function(){
 		BOT.process('run', {start_time: Date.now()},function(o,d){
 			BOT.set("start_time", o.start_time);
 			BOT.log('Running Jester @ '+o.start_time);

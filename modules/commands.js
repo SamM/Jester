@@ -18,4 +18,18 @@ module.exports = function(){
       }
     });
   };
+  this.precommand = function(command, fn){
+    BOT.pre('command:'+command, function(o,d){
+      o.handled++;
+      fn(o);
+      d(o);
+    });
+  };
+  this.postcommand = function(command, fn){
+    BOT.post('command:'+command, function(o,d){
+      o.handled++;
+      fn(o);
+      d(o);
+    });
+  };
 }
