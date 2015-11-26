@@ -84,7 +84,7 @@ module.exports = function(){
     var body = data.body;
     var args = data.args;
 		BOT.DEBUG && BOT.log(data);
-    BOT.DEBUG && BOT.log([BOT.get("username"),"READ",data.raw].join("<"));
+    BOT.DEBUG && BOT.log([BOT.config("username"),"READ",data.raw].join("<"));
     switch(cmd){
       case "dAmnServer":
         BOT.log("*** Connection to dAmn "+param+" established ***");
@@ -111,12 +111,12 @@ module.exports = function(){
         break;
       case "join":
         var e = args.e;
-        if(e!="ok") BOT.log(BOT.get("username")+">Error: Could not join "+BOT._ns(param)+": "+e);
+        if(e!="ok") BOT.log(BOT.config("username")+">Error: Could not join "+BOT._ns(param)+": "+e);
         else BOT.channel_joined(param);
         break;
       case "part":
         var e = args.e;
-        if(e!="ok") BOT.log(BOT.get("username")+">ERROR: Could not part "+BOT._ns(param)+": "+e);
+        if(e!="ok") BOT.log(BOT.config("username")+">ERROR: Could not part "+BOT._ns(param)+": "+e);
         else BOT.channel_parted(param);
         break;
       case "property":
@@ -143,7 +143,7 @@ module.exports = function(){
         var by = args.by;
         BOT.process('kicked', {'channel': param, 'by': by, "reason": args.r || false}, function(o,d){
 					BOT.events.emit("kicked", o);
-          BOT.log("*** "+BOT.get("username")+" has been kicked from "+BOT.simpleNS(o.channel)+" by "+o.by+" * "+o.reason);
+          BOT.log("*** "+BOT.config("username")+" has been kicked from "+BOT.simpleNS(o.channel)+" by "+o.by+" * "+o.reason);
         });
         break;
       case "recv":
@@ -232,14 +232,14 @@ module.exports = function(){
   };
   this.channel_joined = function(ns){
     BOT.process('join', {channel: BOT.formatNS(ns)}, function(o,d){
-      BOT.log("*** "+BOT.get("username")+" has joined "+o.channel+" *");
+      BOT.log("*** "+BOT.config("username")+" has joined "+o.channel+" *");
       BOT.channel_create(o.channel);
       d(o);
     })
   };
   this.channel_parted = function(ns){
     BOT.process('part', {channel: BOT.formatNS(ns)}, function(o,d){
-      BOT.log("*** "+BOT.get("username")+" has left "+BOT._ns(ns)+" *");
+      BOT.log("*** "+BOT.config("username")+" has left "+BOT._ns(ns)+" *");
       d(o);
     })
   };
@@ -260,7 +260,7 @@ module.exports = function(){
 				}
 			});
 
-      BOT.DEBUG && BOT.log([BOT.get("username"),"RECV",ns,cmd,param].join("<"));
+      BOT.DEBUG && BOT.log([BOT.config("username"),"RECV",ns,cmd,param].join("<"));
 
       switch(cmd){
         case "msg":
@@ -281,13 +281,13 @@ module.exports = function(){
           BOT.recv.kicked(ns,param,args.by,chunks.pop());
           break;
         case "default":
-          BOT.log(BOT.get("username")+"<RECV<ERROR<UNKNOWN_RECV<"+cmd)
+          BOT.log(BOT.config("username")+"<RECV<ERROR<UNKNOWN_RECV<"+cmd)
       }
     },
     msg: function(ns,from,content){
       BOT.process('recv:msg', {channel: BOT.ns_(ns), from: from, text: BOT.formatMsg(content)}, function(o,d){
         this.logMsg(o.channel, "<"+o.from+"> "+o.text);
-        var trig = BOT.get("trigger"), text = o.text;
+        var trig = BOT.config("trigger"), text = o.text;
         if(text.indexOf(trig)==0){
           if(content.indexOf(trig+":")==0)trig+=":";
           if(content.indexOf(trig+" ")==0)trig+=" ";

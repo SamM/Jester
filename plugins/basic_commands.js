@@ -108,7 +108,7 @@ module.exports = function(){
       if(BOT.checkAuth(o.from, 5)){
     		if(o.params.length){
           var trigger = o.params[0];
-    			BOT.set("trigger", trigger);
+    			BOT.config("trigger", trigger);
     			BOT.send.msg_to(o.channel,o.from,"My trigger is now "+trigger);
         }
     	}

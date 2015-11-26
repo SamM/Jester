@@ -7,25 +7,25 @@ module.exports = function(){
 		function botcheckResponse(from){
 			return 'BDS:BOTCHECK:RESPONSE:'+[
         from,
-        BOT.get("owner"),
-        BOT.get("useragent").split(" ").join(",")+"/0.2",
-        md5((BOT.get("trigger")+from+BOT.get("username")).toLowerCase()),BOT.get("trigger")
+        BOT.config("owner"),
+        BOT.config("useragent").split(" ").join(",")+"/0.2",
+        md5((BOT.config("trigger")+from+BOT.config("username")).toLowerCase()),BOT.config("trigger")
       ].join(",");
 		}
 		this.pre('recv:msg', function(o,d){
-			if(new RegExp(BOT.get("username")+"(: |:)botcheck", "gi").test(o.text)) {
+			if(new RegExp(BOT.config("username")+"(: |:)botcheck", "gi").test(o.text)) {
 				var msg = plugin.reply+'<abbr title="'+[
           "botresponse:",
           o.from,
-          BOT.get("owner"),
-          BOT.get("useragent")+"/0.2",
-          md5((BOT.get("trigger")+o.from+BOT.get("username")).toLowerCase()),
-          BOT.get("trigger")
+          BOT.config("owner"),
+          BOT.config("useragent")+"/0.2",
+          md5((BOT.config("trigger")+o.from+BOT.config("username")).toLowerCase()),
+          BOT.config("trigger")
         ].join(" ")+'"></abbr>';
 				BOT.send.msg(o.channel, msg);
 			}
 			if(o.channel == 'chat:DataShare'){
-				if(o.text.indexOf("BOTCHECK:ALL") == 0 || o.text.indexOf("BDS:BOTCHECK:DIRECT:"+BOT.get("username"))==0){
+				if(o.text.indexOf("BOTCHECK:ALL") == 0 || o.text.indexOf("BDS:BOTCHECK:DIRECT:"+BOT.config("username"))==0){
 					BOT.send.msg(o.channel, botcheckResponse(o.from));
 				}
 			}

@@ -5,7 +5,7 @@ module.exports = function(){
 		if(ns.indexOf("pchat:")==0){
 			ns = ns.slice(6).split(":");
 			if(ns.length==1) ns = ns[0];
-			else ns = ns[0].toLowerCase()==BOT.get("username").toLowerCase()?ns[1]:ns[0];
+			else ns = ns[0].toLowerCase()==BOT.config("username").toLowerCase()?ns[1]:ns[0];
 			ns = "pchat:"+ns;
 		}
 		return ns.sj("pchat:","@").sj("chat:","#");

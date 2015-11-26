@@ -18,6 +18,7 @@ function Jester(){
   ];
 
   var plugins = [
+    "webserver",
     "basic_commands"
     , "antikick"
     //, "botcheck"
@@ -52,7 +53,7 @@ function Jester(){
   //
   // Set Config Defaults
   //
-  BOT.set("version", version);
+  BOT.config("version", version);
   BOT.set("useragent", "Jester "+version);
   BOT.set("trigger", "?");
   BOT.set("owner", "UNKNOWN");
@@ -62,7 +63,6 @@ function Jester(){
 		BOT.process('run', {start_time: Date.now()},function(o,d){
 			BOT.set("start_time", o.start_time);
 			BOT.log('Running Jester @ '+o.start_time);
-			BOT.connect();
 			d(o);
 		});
 	};

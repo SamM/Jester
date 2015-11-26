@@ -1,10 +1,11 @@
-module.exports = function(socket){
-
-  if(!socket) return;
+module.exports = function(){
 
   var BOT = this;
+  if(!BOT.web.socket){
+    throw "Web socket not available. Load webserver plugin first";
+  }
 
-  socket.emit('connected', {});
+  BOT.web.socket.emit('connected', {});
 
   var bot_events = [
     "load_module",
@@ -28,12 +29,12 @@ module.exports = function(socket){
   // Broadcast these bot events as-is to the web client
   bot_events.forEach(function(event){
     BOT.events.on(event, function(data){
-      socket.emit(event, data);
-      socket.emit("bot event", { event: event, data: data });
+      BOT.web.socket.emit(event, data);
+      BOT.web.socket.emit("bot event", { event: event, data: data });
     });
   });
 
-  socket.on("run", function(){
-    BOT.run();
+  socket.on("connect", function(){
+    BOT.connect();
   });
 };

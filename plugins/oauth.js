@@ -15,4 +15,7 @@ var oauth = new OAuth2(
   "oauth2/token",
   null);
 
-module.exports = oauth;
+module.exports = function(){
+  this.oauth = oauth;
+};
+module.exports.oauth = oauth;

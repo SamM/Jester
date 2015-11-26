@@ -2,13 +2,13 @@ module.exports = function(){
   var BOT = this;
   BOT.send = {
     handshake: function(){
-      BOT.process('send:handshake', {'agent': BOT.get("useragent")}, function(o,d){
+      BOT.process('send:handshake', {'agent': BOT.config("useragent")}, function(o,d){
         BOT.send.pkt("dAmnClient 0.3","agent="+o.agent,''); d(o)
       });
     },
     login: function(){
-      var token = BOT.get("damn_token");
-      var username = BOT.get("username");
+      var token = BOT.config("damn_token");
+      var username = BOT.config("username");
       if(!token){
         BOT.events.emit("error", {type: "login", error: "No damn_token supplied in config"});
         BOT.log(["ERROR","login","No damn_token supplied in config"].join(">>"));
@@ -39,7 +39,7 @@ module.exports = function(){
     chat: function(ns){
       if(!ns) return;
       if(ns[0]=="#" || ns.slice(0,5)=="chat:") return this.join(ns);
-      BOT.process('send:chat', {'channel': BOT.formatChatNS(ns, BOT.get("username"))}, function(o,d){
+      BOT.process('send:chat', {'channel': BOT.formatChatNS(ns, BOT.config("username"))}, function(o,d){
         BOT.send.pkt("join "+o.channel, ''); d(o)
       })
     },
@@ -105,7 +105,7 @@ module.exports = function(){
     pkt: function(){
       var data = [].slice.call(arguments).join("\n")+"\u0000";
       BOT.process('send:pkt', {'pkt': data}, function(o,d){
-        BOT.DEBUG && BOT.log([BOT.get("username"),"SEND",o.pkt.replace(/\n/g,"\\n").replace(/\u0000/g,"\\u0000")].join(">"));
+        BOT.DEBUG && BOT.log([BOT.config("username"),"SEND",o.pkt.replace(/\n/g,"\\n").replace(/\u0000/g,"\\u0000")].join(">"));
         BOT.connection.write(o.pkt);
          d(o)
       });
