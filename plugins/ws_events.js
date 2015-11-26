@@ -5,8 +5,6 @@ module.exports = function(){
     throw "Web socket not available. Load webserver plugin first";
   }
 
-  BOT.web.socket.emit('connected', {});
-
   var bot_events = [
     "load_module",
     "run",
@@ -17,7 +15,7 @@ module.exports = function(){
     "handshake",
     "join",
     "part",
-    "set",
+    "config",
     "channel_create",
     "recv:msg",
     "command",
@@ -34,7 +32,10 @@ module.exports = function(){
     });
   });
 
-  socket.on("connect", function(){
-    BOT.connect();
+  BOT.web.socket.on('connection', function (socket) {
+    socket.emit('connected', {});
+    socket.on("bot connect", function(){
+      BOT.connect();
+    });
   });
 };

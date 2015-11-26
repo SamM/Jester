@@ -10,18 +10,12 @@ module.exports = function(){
   BOT.web = {};
   BOT.web.app = app;
   BOT.web.server = server;
-  BOT.web.io = io;
+  BOT.web.socket = io;
 
   //
-  // Web Socket Connection
+  // Web Socket Events Plugin
   //
-  io.on('connection', function (socket) {
-    BOT.web.socket = socket;
-    //
-    // Load Bot Events Plugin
-    //
-    require("./bot_events").call(BOT);
-  });
+  require("./ws_events").call(BOT);
 
   //
   // Express App Settings
@@ -115,19 +109,20 @@ module.exports = function(){
       }
     );
   });
-
   //
   // Start server listening on BOT.run()
   //
-  BOT.pre("run", function(o,d){
-    o.server = BOT.server;
-    BOT.server.listen(4000, function () {
-      var port = server.address().port;
-      var host = server.address().host;
-      host = host==":"?"localhost":host;
+  BOT.post("run", function(o,d){
+    o.server = BOT.web.server;
+    BOT.web.server.listen(4000, function () {
+      var port = o.server.address().port;
+      var host = o.server.address().address;
+      host = host=="::"?"localhost":host;
       o.port = port;
       o.host = host;
-      console.log('Bot Control Panel available at http://+'host'+:'+port);
+      console.log();
+      BOT.log('Bot Control Panel available at http://'+host+':'+port);
+      BOT.log('Please use the control panel to connect your bot to dAmn.')
       d(o);
     });
   });

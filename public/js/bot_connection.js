@@ -7,8 +7,8 @@ socket.on('connected', function (data) {
 var Jester = new (function(){
   var BOT = this;
 
-  BOT.run = function(){
-    socket.emit("run", {});
+  BOT.connect = function(){
+    socket.emit("bot connect", {});
   };
   BOT.on_event = function(data){
     console.log(data.event+": "+JSON.stringify(data.data));

@@ -142,7 +142,6 @@ module.exports = function(){
       case "kicked":
         var by = args.by;
         BOT.process('kicked', {'channel': param, 'by': by, "reason": args.r || false}, function(o,d){
-					BOT.events.emit("kicked", o);
           BOT.log("*** "+BOT.config("username")+" has been kicked from "+BOT.simpleNS(o.channel)+" by "+o.by+" * "+o.reason);
         });
         break;
