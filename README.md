@@ -1,2 +1,2 @@
 # Jester
-### A dAmn Bot written in Node.js
+### A bot for dAmn written in Node.js
