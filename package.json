@@ -1,8 +1,30 @@
 {
-	name: "Jester",
-	version: "0.1",
-	main: "./jester",
-	dependencies: {
-		"MD5": "0.0.0"
-	}
+  "name": "jester",
+  "version": "1.0.0",
+  "description": "dAmn Bot written in Node.js",
+  "main": "run.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SamM/Jester.git"
+  },
+  "keywords": [
+    "deviantart",
+    "damn",
+    "bot"
+  ],
+  "author": "Sam Mulqueen <sammulqueen.nz@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SamM/Jester/issues"
+  },
+  "homepage": "https://github.com/SamM/Jester#readme",
+  "dependencies": {
+    "express": "^4.13.3",
+    "express-handlebars": "^2.0.1",
+    "oauth": "^0.9.14",
+    "socket.io": "^1.3.7"
+  }
 }
