@@ -15,10 +15,11 @@ module.exports = function(){
     if(typeof id != 'string' || typeof fn != 'function' || typeof data != "object")
       throw new Error('TypeError');
 
-    data.plugin_id = id;
-    BOT.plugins[id] = data;
-
-    BOT.events.emit("plugin", id, data);
-    return fn.call(BOT, BOT.plugins[id], BOT);
+    BOT.process("plugin", { id: id, data: data }, function(o,d){
+      data.plugin_id = id;
+      BOT.plugins[id] = data;
+      fn.call(BOT, BOT.plugins[id], BOT);
+      d(o);
+    });
   };
 }

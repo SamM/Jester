@@ -25,19 +25,22 @@ module.exports = function(){
   };
   var chunk = "";
   this.read = function(pkt){
-		BOT.events.emit("read", pkt);
-    pkt = pkt.toString().replace(/\0/g,"\u0000").replace(/\r/g,"\u0000");
-    if(false && pkt.indexOf("\u0000")<0){
-      chunk = chunk + pkt;
-      return;
-    }
-    if(chunk.length){
-      pkt = chunk + pkt;
-      chunk = "";
-    }
-    var pkts = pkt.split("\u0000");
-    for(var i=0;i<pkts.length;i++)
-      BOT.read_pkt(pkts[i]);
+		BOT.process("read", {pkt: pkt}, function(o,d){
+			var pkt = o.pkt.toString().replace(/\0/g,"\u0000").replace(/\r/g,"\u0000");
+	    if(false && pkt.indexOf("\u0000")<0){
+	      chunk = chunk + pkt;
+				d(o);
+				return;
+	    }
+	    if(chunk.length){
+	      pkt = chunk + pkt;
+	      chunk = "";
+	    }
+	    var pkts = pkt.split("\u0000");
+	    for(var i=0;i<pkts.length;i++)
+	      BOT.read_pkt(pkts[i]);
+			d(o);
+		});
   };
   this.format_data = function(data){
     //
@@ -78,83 +81,90 @@ module.exports = function(){
   this.read_pkt  = function(pkt){
     if(!pkt.length) return;
     var data = this.format_data(pkt);
-		BOT.events.emit("read_pkt", data);
-		var cmd = data.command;
-    var param = data.param;
-    var body = data.body;
-    var args = data.args;
-		BOT.DEBUG && BOT.log(data);
-    BOT.DEBUG && BOT.log([BOT.config("username"),"READ",data.raw].join("<"));
-    switch(cmd){
-      case "dAmnServer":
-        BOT.log("*** Connection to dAmn "+param+" established ***");
-				BOT.events.emit("connected", param);
-        BOT.send.login();
-        break;
-      case "login":
-        var e = args.e;
-        if(e!="ok"){
-          BOT.log("*** Failed to authenticate as "+param+" ***\nReason: "+e);
-					BOT.events.emit("login", {success: false, username: param, reason: e});
-        }else{
-          BOT.log("*** Successfully authenticated as "+param+" *** ");
-					BOT.events.emit("login", {success: true, username: param});
-          BOT.send.autojoin();
-        }
-        break;
-      case "ping":
-        BOT.process('ping', function(o,d){
-          BOT.log("*PING*PONG*");
-					BOT.events.emit("ping");
-          BOT.send.pong();
-        });
-        break;
-      case "join":
-        var e = args.e;
-        if(e!="ok") BOT.log(BOT.config("username")+">Error: Could not join "+BOT._ns(param)+": "+e);
-        else BOT.channel_joined(param);
-        break;
-      case "part":
-        var e = args.e;
-        if(e!="ok") BOT.log(BOT.config("username")+">ERROR: Could not part "+BOT._ns(param)+": "+e);
-        else BOT.channel_parted(param);
-        break;
-      case "property":
-        var prop = args.p;
-        (function(){
-          switch(prop){
-          case "topic":
-          case "title":
-            BOT['channel_'+prop](param, body, args.by, args.ts);
-          break;
-          case "members":
-          case "privclasses":
-            BOT['channel_'+prop](param, body);
-          break;
-          default:
-            if(prop.indexOf("login:")==0){
-              BOT.channel_whois(param, prop.slice(6), body);
-            }
-          break;
-          }
-        }).call(this);
-        break;
-      case "kicked":
-        var by = args.by;
-        BOT.process('kicked', {'channel': param, 'by': by, "reason": args.r || false}, function(o,d){
-          BOT.log("*** "+BOT.config("username")+" has been kicked from "+BOT.simpleNS(o.channel)+" by "+o.by+" * "+o.reason);
-        });
-        break;
-      case "recv":
-        BOT.recv.pkt(data)
-        break;
-      case "disconnect":
-        if(args.e == "ok"){
-          // Restart
-        }
-        BOT.disconnected();
-        break;
-    }
+		BOT.process("read_pkt",{ pkt: pkt, data: data },function(o,d){
+			var data = o.data;
+			var cmd = data.command;
+	    var param = data.param;
+	    var body = data.body;
+	    var args = data.args;
+			BOT.DEBUG && BOT.log(data);
+	    BOT.DEBUG && BOT.log([BOT.config("username"),"READ",data.raw].join("<"));
+	    switch(cmd){
+	      case "dAmnServer":
+	        BOT.log("*** Connection to dAmn "+param+" established ***");
+					BOT.process("connected",{version: param},function(o2,d2){
+						BOT.send.login();
+						d2(o2);
+					});
+	        break;
+	      case "login":
+	        var e = args.e;
+					BOT.process("login",{ event: e, success: e=="ok", username: param },function(o2,d2){
+						if(!o2.success){
+		          BOT.log("*** Failed to authenticate as "+o2.username+" ***\nReason: "+o2.event);
+		        }else{
+		          BOT.log("*** Successfully authenticated as "+o2.username+" *** ");
+		          BOT.send.autojoin();
+		        }
+						d2(o2);
+					});
+	        break;
+	      case "ping":
+	        BOT.process('ping', function(o2,d2){
+	          BOT.log("*PING*PONG*");
+						BOT.send.pong();
+						d2(o2);
+	        });
+	        break;
+	      case "join":
+	        var e = args.e;
+	        if(e!="ok") BOT.log(BOT.config("username")+">Error: Could not join "+BOT._ns(param)+": "+e);
+	        else BOT.channel_joined(param);
+	        break;
+	      case "part":
+	        var e = args.e;
+	        if(e!="ok") BOT.log(BOT.config("username")+">ERROR: Could not part "+BOT._ns(param)+": "+e);
+	        else BOT.channel_parted(param);
+	        break;
+	      case "property":
+	        var prop = args.p;
+	        (function(){
+	          switch(prop){
+	          case "topic":
+	          case "title":
+	            BOT['channel_'+prop](param, body, args.by, args.ts);
+	          break;
+	          case "members":
+	          case "privclasses":
+	            BOT['channel_'+prop](param, body);
+	          break;
+	          default:
+	            if(prop.indexOf("login:")==0){
+	              BOT.channel_whois(param, prop.slice(6), body);
+	            }
+	          break;
+	          }
+	        }).call(this);
+	        break;
+	      case "kicked":
+	        var by = args.by;
+	        BOT.process('kicked', {'channel': param, 'by': by, "reason": args.r || false}, function(o2,d2){
+	          BOT.log("*** "+BOT.config("username")+" has been kicked from "+BOT.simpleNS(o2.channel)+" by "+o2.by+" * "+o2.reason);
+						d2(o2);
+	        });
+	        break;
+	      case "recv":
+	        BOT.recv.pkt(data)
+	        break;
+	      case "disconnect":
+	        if(args.e == "ok"){
+	          // Restart
+	        }
+	        BOT.disconnected();
+	        break;
+	    }
+			d(o);
+		});
   };
   this.channel_create = function(ns){
     if(!BOT.channels[BOT.formatNS(ns).toLowerCase()]){
@@ -226,9 +236,11 @@ module.exports = function(){
       d(o);
     });
   };
-  this.channel_whois = function(ns, text){
-		BOT.events.emit("whois", ns, text);
-  };
+  this.channel_whois = function(ns, args){
+		BOT.process("whois", { channel: ns, args: args }, function(o,d){
+			d(o);
+		})
+	};
   this.channel_joined = function(ns){
     BOT.process('join', {channel: BOT.formatNS(ns)}, function(o,d){
       BOT.log("*** "+BOT.config("username")+" has joined "+o.channel+" *");
@@ -244,44 +256,47 @@ module.exports = function(){
   };
   this.recv = {
     pkt: function(data){
-			BOT.events.emit("recv:pkt", {pkt: data});
-      var ns = data.param,
-				body = data.body,
-				chunks = body.split("\n"),
-        cmd = chunks[0].split(" ")[0],
-				param = chunks[0].split(" ")[1];
+			BOT.process("recv:pkt", { data: data }, function(o,d){
+				var data = o.data,
+					ns = data.param,
+					body = data.body,
+					chunks = body.split("\n"),
+	        cmd = chunks[0].split(" ")[0],
+					param = chunks[0].split(" ")[1];
 
-			var args = {};
-			chunks.slice(1).forEach(function(chunk){
-				if(chunk.indexOf("=")>-1){
-					chunk = chunk.split("=");
-					args[chunk[0]] = chunk[1];
-				}
+				var args = {};
+				chunks.slice(1).forEach(function(chunk){
+					if(chunk.indexOf("=")>-1){
+						chunk = chunk.split("=");
+						args[chunk[0]] = chunk[1];
+					}
+				});
+
+	      BOT.DEBUG && BOT.log([BOT.config("username"),"RECV",ns,cmd,param].join("<"));
+
+	      switch(cmd){
+	        case "msg":
+	        case "action":
+	          var from = chunks[1].split("=")[1] || "";
+	          (cmd=="msg"?BOT.recv.msg:BOT.recv.action)(ns,from,chunks[3]||"");
+	          break;
+	        case "join":
+	          BOT.recv.join(ns,param,args);
+	          break;
+					case "part":
+	          BOT.recv.part(ns,param,args);
+	          break;
+	        case "privchg":
+	          BOT.recv.privchg(ns,param,args);
+	          break;
+	        case "kicked":
+	          BOT.recv.kicked(ns,param,args.by,chunks.pop());
+	          break;
+	        case "default":
+	          BOT.log(BOT.config("username")+"<RECV<ERROR<UNKNOWN_RECV<"+cmd)
+	      }
+				d(o);
 			});
-
-      BOT.DEBUG && BOT.log([BOT.config("username"),"RECV",ns,cmd,param].join("<"));
-
-      switch(cmd){
-        case "msg":
-        case "action":
-          var from = chunks[1].split("=")[1] || "";
-          (cmd=="msg"?BOT.recv.msg:BOT.recv.action)(ns,from,chunks[3]||"");
-          break;
-        case "join":
-          BOT.recv.join(ns,param,args);
-          break;
-				case "part":
-          BOT.recv.part(ns,param,args);
-          break;
-        case "privchg":
-          BOT.recv.privchg(ns,param,args);
-          break;
-        case "kicked":
-          BOT.recv.kicked(ns,param,args.by,chunks.pop());
-          break;
-        case "default":
-          BOT.log(BOT.config("username")+"<RECV<ERROR<UNKNOWN_RECV<"+cmd)
-      }
     },
     msg: function(ns,from,content){
       BOT.process('recv:msg', {channel: BOT.ns_(ns), from: from, text: BOT.formatMsg(content)}, function(o,d){

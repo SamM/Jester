@@ -3,13 +3,13 @@ module.exports = function(){
 
 	BOT.plugin('antikick', {enabled: true}, function(plugin){
 
-		BOT.post('kicked', function(o,d){
+		BOT.after('kicked', function(o,d){
 			if(plugin.enabled){
 				BOT.send.join(o.channel);
 			}
 			d(o);
 		});
-    
+
 	});
 
 };

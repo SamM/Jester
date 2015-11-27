@@ -1,5 +1,8 @@
+var EventEmitter = require('events');
+
 module.exports = function(){
   var BOT = this;
+  this.events = new EventEmitter();
   this.preprocessors = {};
   this.postprocessors = {};
   this.process = function(id, object, process){
@@ -25,6 +28,7 @@ module.exports = function(){
     }
     function callprocess(o){
       i=0;
+      BOT.events.emit("event", id, o);
       BOT.events.emit(id, o);
       process.call(self, o, postprocessing)
     }
@@ -43,18 +47,20 @@ module.exports = function(){
     return this;
 
   };
-  this.pre = function(id, processor){
+  this.before = function(id, processor){
     if(!Array.isArray(this.preprocessors[id]))
       this.preprocessors[id] = [];
     var prep=this.preprocessors[id];
     if(typeof processor == "function") prep.push(processor);
     return this;
   };
-  this.post = function(id, processor){
+  this.after = function(id, processor){
     if(!Array.isArray(this.postprocessors[id]))
       this.postprocessors[id] = [];
     var post=this.postprocessors[id];
     if(typeof processor == "function") post.push(processor);
     return this;
   };
+  this.on = this.events.on;
+  this.emit = this.events.emit;
 }

@@ -1,8 +1,12 @@
 module.exports = function(){
-  this.autojoin_channels = [];
+  var BOT = this;
+  BOT.config("autojoin", [], true);
   this.autojoin = function(){
-    this.autojoin_channels = this.autojoin_channels.concat([].slice.call(arguments));
-    this.events.emit("add_autojoin", {channels: this.autojoin_channels});
+    var channels = [].slice.call(arguments);
+    BOT.process("autojoin_append", { channels: channels }, function(o, d){
+      BOT.config("autojoin", BOT.config("autojoin").concat(o.channels));
+      d(o);
+    })
     return this;
   };
 }

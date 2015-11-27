@@ -1,24 +1,25 @@
 var version = "0.1";
-var EventEmitter = require('events');
 
 function Jester(){
   var BOT = this;
   var modules = [
     "ns",
     "utils",
+    "events",
     "logging",
     "config",
-    "processing",
+    "ns",
     "plugins",
     "connection",
     "users",
     "commands",
     "send",
-    "autojoin"
+    "autojoin",
+    "webserver",
+    "ws_events"
   ];
 
   var plugins = [
-    "webserver",
     "basic_commands",
     "antikick"
     //"botcheck"
@@ -27,11 +28,9 @@ function Jester(){
   //
   // Add Event Handling
   //
-  BOT.events = new EventEmitter();
 
   BOT.loadModule = function(path){
     try{
-      BOT.events.emit("load_module", {path: path});
       require(path).call(BOT);
     } catch(ex){ console.log("Error loading bot module '"+path+"': ",ex.stack.split("\n")); }
   }

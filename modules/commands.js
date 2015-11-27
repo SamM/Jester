@@ -18,15 +18,15 @@ module.exports = function(){
       }
     });
   };
-  this.precommand = function(command, fn){
-    BOT.pre('command:'+command, function(o,d){
+  this.before_command = function(command, fn){
+    BOT.before('command:'+command, function(o,d){
       o.handled++;
       fn(o);
       d(o);
     });
   };
-  this.postcommand = function(command, fn){
-    BOT.post('command:'+command, function(o,d){
+  this.after_command = function(command, fn){
+    BOT.after('command:'+command, function(o,d){
       o.handled++;
       fn(o);
       d(o);

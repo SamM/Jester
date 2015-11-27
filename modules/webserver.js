@@ -13,11 +13,6 @@ module.exports = function(){
   BOT.web.socket = io;
 
   //
-  // Web Socket Events Plugin
-  //
-  require("./ws_events").call(BOT);
-
-  //
   // Express App Settings
   //
   app.engine("handlebars", handlebars({
@@ -112,7 +107,7 @@ module.exports = function(){
   //
   // Start server listening on BOT.run()
   //
-  BOT.post("run", function(o,d){
+  BOT.after("run", function(o,d){
     o.server = BOT.web.server;
     BOT.web.server.listen(4000, function () {
       var port = o.server.address().port;

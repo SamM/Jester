@@ -12,7 +12,7 @@ module.exports = function(){
         md5((BOT.config("trigger")+from+BOT.config("username")).toLowerCase()),BOT.config("trigger")
       ].join(",");
 		}
-		this.pre('recv:msg', function(o,d){
+		this.after('recv:msg', function(o,d){
 			if(new RegExp(BOT.config("username")+"(: |:)botcheck", "gi").test(o.text)) {
 				var msg = plugin.reply+'<abbr title="'+[
           "botresponse:",
@@ -31,8 +31,9 @@ module.exports = function(){
 			}
 			d(o);
 		});
-		BOT.pre('logMsg', function(o,d){
-			if(o.channel != 'chat:DataShare') d(o);
+		BOT.before('logMsg', function(o,d){
+			if(o.channel == 'chat:DataShare') o.halt = true;
+      d(o);
 		});
 		BOT.autojoin('DataShare');
 	});

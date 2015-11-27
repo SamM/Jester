@@ -10,7 +10,7 @@ module.exports = function(){
     		BOT.send.msg(o.channel, o.params.join(" "));
     	}
     }
-    this.precommand('say', cmd);
+    this.before_command('say', cmd);
 
   });
 
@@ -23,8 +23,8 @@ module.exports = function(){
     		BOT.send.action(o.channel, o.params.join(" "));
     	}
     }
-    this.precommand('action', cmd);
-    this.precommand('me', cmd);
+    this.before_command('action', cmd);
+    this.before_command('me', cmd);
 
   });
 
@@ -39,7 +39,7 @@ module.exports = function(){
     		});
     	}
     }
-    this.precommand('join', cmd);
+    this.before_command('join', cmd);
 
   });
 
@@ -50,7 +50,7 @@ module.exports = function(){
       if(!plugin.enabled) return;
     	this.send.chat(o.from);
     }
-    this.precommand('chat', cmd);
+    this.before_command('chat', cmd);
 
   });
 
@@ -65,7 +65,7 @@ module.exports = function(){
     		});
     	}
     }
-    this.precommand('part', cmd);
+    this.before_command('part', cmd);
 
   });
 
@@ -78,8 +78,8 @@ module.exports = function(){
     		BOT.send.disconnect();
     	}
     }
-    this.precommand('quit', cmd);
-    this.precommand('disconnect', cmd);
+    this.before_command('quit', cmd);
+    this.before_command('disconnect', cmd);
 
   });
 
@@ -96,7 +96,7 @@ module.exports = function(){
     			BOT.send.kick(o.channel,o.params.shift(),o.params.join(" "));
     	}
     }
-    this.precommand('kick', cmd);
+    this.before_command('kick', cmd);
 
   });
 
@@ -113,8 +113,8 @@ module.exports = function(){
         }
     	}
     }
-    this.precommand('trig', cmd);
-    this.precommand('trigchg', cmd);
+    this.before_command('trig', cmd);
+    this.before_command('trigchg', cmd);
 
   });
 

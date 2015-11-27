@@ -10,13 +10,11 @@ module.exports = function(){
       var token = BOT.config("damn_token");
       var username = BOT.config("username");
       if(!token){
-        BOT.events.emit("error", {type: "login", error: "No damn_token supplied in config"});
-        BOT.log(["ERROR","login","No damn_token supplied in config"].join(">>"));
+        BOT.process("error", {type: "login", error: "No damn_token supplied in config"});
         return;
       }
       if(!username){
-        BOT.events.emit("error", {type: "login", error: "No username supplied in config"});
-        BOT.log(["ERROR","login","No username supplied in config"].join(">>"));
+        BOT.process("error", {type: "login", error: "No username supplied in config"});
         return;
       }
       BOT.process('send:login', {'username': username, 'pk': token}, function(o,d){
@@ -24,7 +22,7 @@ module.exports = function(){
       })
     },
     autojoin: function(){
-      BOT.process('autojoin', {'channels': BOT.autojoin_channels}, function(o,d){
+      BOT.process('autojoin', {'channels': BOT.config("autojoin")}, function(o,d){
         o.channels.forEach(function(ns){ BOT.send.join(ns) });
         d(o)
       });
