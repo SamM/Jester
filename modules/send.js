@@ -2,7 +2,7 @@ module.exports = function(){
   var BOT = this;
   BOT.send = {
     handshake: function(){
-      BOT.process('send:handshake', {'agent': BOT.config("useragent")}, function(o,d){
+      BOT.process('send:handshake', {'agent': BOT.useragent}, function(o,d){
         BOT.send.pkt("dAmnClient 0.3","agent="+o.agent,''); d(o)
       });
     },

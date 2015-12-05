@@ -2,6 +2,12 @@ var version = "0.1";
 
 function Jester(){
   var BOT = this;
+
+  BOT.version = version;
+  BOT.useragent = "Jester "+version;
+  BOT.port = 4000;
+  BOT.username = null;
+
   var modules = [
     "ns",
     "utils",
@@ -15,8 +21,10 @@ function Jester(){
     "commands",
     "send",
     "autojoin",
+    "oauth",
     "webserver",
-    "ws_events"
+    "ws_events",
+    "chatlog"
   ];
 
   var plugins = [
@@ -49,18 +57,11 @@ function Jester(){
     BOT.loadModule("./plugins/"+plugin);
   });
 
-  //
-  // Set Config Defaults
-  //
-  BOT.config("version", version);
-  BOT.config("useragent", "Jester "+version);
-  BOT.config("trigger", "?");
-  BOT.config("owner", "UNKNOWN");
-  BOT.config("username", "UNKNOWN");
-
-  BOT.run = function(){
-		BOT.process('run', {start_time: Date.now()},function(o,d){
-			BOT.config("start_time", o.start_time);
+  BOT.run = function(port){
+    if(port){
+      BOT.port = port;
+    }
+		BOT.process('run', {start_time: new Date()},function(o,d){
 			BOT.log('Running Jester @ '+o.start_time);
 			d(o);
 		});

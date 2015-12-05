@@ -4,30 +4,39 @@ var http = require('http'),
 
 module.exports = function(){
   var BOT = this;
+	this.connected = false;
   this.connection = null;
   this.channels = {};
   this.connect = function(){
     BOT.process('connect', function(o,d){
-      BOT.log('Connecting to dAmn');
+      BOT.log('*** Connecting to dAmn ***');
       var con = BOT.connection = net.createConnection(3900, 'chat.deviantart.com');
-      con.on("data",function(p){ BOT.read(p); });
+			BOT.connected = true;
+			con.on("data",function(p){ BOT.read(p); });
       con.on("connect",function(){ BOT.process('connected', function(o,d){ BOT.send.handshake(); d(o) }); });
-      con.on("end", function(){ BOT.disconnected(); })
+      con.on("end", function(){ BOT.connection_closed(); })
       d(o);
     });
   };
   this.disconnected = function(){
     BOT.process('disconnected', function(o,d){
-      BOT.log("Disconnected from dAmn");
+      BOT.log("*** Disconnected from dAmn ***");
       BOT.connection.end();
+			BOT.connected = false;
       d(o);
     });
   };
+	this.connection_closed = function(){
+		BOT.process('connection_closed', function(o,d){
+			BOT.connected = false;
+      d(o);
+    });
+	};
   var chunk = "";
   this.read = function(pkt){
 		BOT.process("read", {pkt: pkt}, function(o,d){
 			var pkt = o.pkt.toString().replace(/\0/g,"\u0000").replace(/\r/g,"\u0000");
-	    if(false && pkt.indexOf("\u0000")<0){
+			if(false && pkt.indexOf("\u0000")<0){
 	      chunk = chunk + pkt;
 				d(o);
 				return;
@@ -111,19 +120,18 @@ module.exports = function(){
 	        break;
 	      case "ping":
 	        BOT.process('ping', function(o2,d2){
-	          BOT.log("*PING*PONG*");
 						BOT.send.pong();
 						d2(o2);
 	        });
 	        break;
 	      case "join":
 	        var e = args.e;
-	        if(e!="ok") BOT.log(BOT.config("username")+">Error: Could not join "+BOT._ns(param)+": "+e);
+	        if(e!="ok") BOT.log("ERROR: Could not join "+BOT._ns(param)+": "+e);
 	        else BOT.channel_joined(param);
 	        break;
 	      case "part":
 	        var e = args.e;
-	        if(e!="ok") BOT.log(BOT.config("username")+">ERROR: Could not part "+BOT._ns(param)+": "+e);
+	        if(e!="ok") BOT.log("ERROR: Could not part "+BOT._ns(param)+": "+e);
 	        else BOT.channel_parted(param);
 	        break;
 	      case "property":
@@ -147,11 +155,7 @@ module.exports = function(){
 	        }).call(this);
 	        break;
 	      case "kicked":
-	        var by = args.by;
-	        BOT.process('kicked', {'channel': param, 'by': by, "reason": args.r || false}, function(o2,d2){
-	          BOT.log("*** "+BOT.config("username")+" has been kicked from "+BOT.simpleNS(o2.channel)+" by "+o2.by+" * "+o2.reason);
-						d2(o2);
-	        });
+					BOT.kicked(param, args.by, args.r);
 	        break;
 	      case "recv":
 	        BOT.recv.pkt(data)
@@ -166,73 +170,108 @@ module.exports = function(){
 			d(o);
 		});
   };
-  this.channel_create = function(ns){
-    if(!BOT.channels[BOT.formatNS(ns).toLowerCase()]){
-      BOT.process('channel_create', {ns: BOT.formatNS(ns)}, function(o,d){
-        BOT.channels[o.ns.toLowerCase()] = {
-          'ns': o.ns,
-          members: {},
-          topic: "",
-          title: "",
-          privclasses: {}
-        };
-        d(o);
-      });
-    }
+	this.kicked = function(channel, by, reason){
+		BOT.process('kicked', {'channel': channel, 'by': by, "reason": reason?reason:""}, function(o,d){
+			BOT.log("*** "+BOT.config("username")+" has been kicked from "+BOT.simpleNS(o.channel)+" by "+o.by+" * "+o.reason);
+			BOT.chat.self_kicked(o.channel, o.by, o.reason);
+			d(o);
+		});
+	};
+  this.channel_create = function(ns, data, safe){
+    BOT.process('channel_create', {ns: BOT.formatNS(ns), data: data?data:{}, safe: safe}, function(o,d){
+			var data = o.data;
+			var safe = !!o.safe;
+			var ns = o.ns.toLowerCase();
+			if(BOT.channels[ns]){
+	      for(var key in data){
+	        var value = data[key];
+	        if(!safe){
+	          BOT.channels[ns][key] = value;
+	        }else{
+	          if(typeof value == "string"){
+	            if(BOT.channels[ns][key] == ""){
+	              BOT.channels[ns][key] = value;
+	            }
+	          }else if(Array.isArray(value)){
+	            if(BOT.channels[ns][key].length == 0){
+	              BOT.channels[ns][key] = value;
+	            }
+	          }else if(typeof value == "object"){
+	            if(Object.keys(BOT.channels[ns][key]).length == 0){
+	              BOT.channels[ns][key] = value;
+	            }
+	          }
+	        }
+	      }
+	    }else{
+				var channel = {};
+	      channel.topic = data.topic?data.topic:"";
+	      channel.title = data.title?data.title:"";
+	      channel.members = data.members?data.members:{};
+				channel.privclasses = data.privclasses?data.privclasses:{};
+	      channel.ns = o.ns;
+	      BOT.channels[ns] = channel;
+	    }
+      d(o);
+    });
   };
   this.channel_topic = function(ns, text, by, ts){
     BOT.process('topic', {channel: BOT.formatNS(ns), 'text': this.formatMsg(text)}, function(o,d){
-      BOT.log("*** Got topic of "+BOT.simpleNS(o.channel)+" ***");
-      BOT.channel_create(o.channel);
-      BOT.channels[o.channel.toLowerCase()].topic = o.text;
+      BOT.log("*** Got topic for "+BOT.simpleNS(o.channel)+" ***");
+      BOT.channel_create(o.channel, {topic: o.text});
       d(o);
     });
   };
   this.channel_title = function(ns, text, by, ts){
     BOT.process('title', {channel: this.formatNS(ns), 'text': this.formatMsg(text)}, function(o,d){
-      BOT.log("*** Got title of "+BOT.simpleNS(o.channel)+" ***");
-      BOT.channel_create(o.channel);
-      BOT.channels[o.channel.toLowerCase()].title = o.text;
+      BOT.log("*** Got title for "+BOT.simpleNS(o.channel)+" ***");
+      BOT.channel_create(o.channel, {title: o.text});
       d(o);
     });
   };
   this.channel_members = function(ns, list){
     var members = {},
       member;
-    for(var i=0,line;i<list.length;i++){
-      line = list[i];
-      if(!line.length) member = undefined;
-      else if(line.indexOf('member ')==0){
-        member = line.split(" ")[1].toLowerCase();
-        members[member] = { username: line.split(" ")[1] };
-      }else if(line.indexOf('=')>-1 && member){
-        pair = line.split("=");
-        members[member][pair[0]] = pair[1];
-      }
-    }
+		var blocks = list.split("\n\n");
+		for(var b=0; b<blocks.length; b++){
+			var lines = blocks[b].split("\n");
+			if(lines.length > 1){
+				var username = lines[0].split(" ")[1];
+				if(members[username]){
+					members[username].instances++;
+				}else{
+					var member = {};
+					member.username = username;
+					member.instances = 1;
+					if(members[username]){
+						members[username].instances++;
+					}
+					for(var l = 1; l<lines.length; l++){
+						var line = lines[l].split("=");
+						member[line[0]] = line[1];
+					}
+					members[username] = member;
+				}
+			}
+		}
     BOT.process('members', {channel: BOT.formatNS(ns), 'list': list, 'members': members}, function(o,d){
-      var list = [],mem;
-      for(var i in o.members){
-        mem = o.members[i];
-        list.push(mem.symbol+mem.username+"("+mem.pc+")")
-      }
-      BOT.log("*** Got members of "+BOT.simpleNS(o.channel)+" ***");
-      BOT.channel_create(o.channel);
-      BOT.channels[o.channel.toLowerCase()].members = o.members;
+      BOT.log("*** Got members for "+BOT.simpleNS(o.channel)+" ***");
+      BOT.channel_create(o.channel, {members: o.members});
       d(o);
     });
   };
   this.channel_privclasses = function(ns, list){
     var privclasses = {};
-    for(var i=0,pair;i<list.length;i++){
-      if(!list[i] || !list[i].length) continue;
-      pair = list[i].split(":");
-      privclasses[pair[1]] = pair[0];
-    }
+		var lines = list.split("\n");
+		lines.forEach(function(line){
+			if(line.length){
+				line = line.split(":");
+				privclasses[line[0]] = line[1];
+			}
+		});
     BOT.process('privclasses', {channel: BOT.formatNS(ns), 'list': list, 'privclasses': privclasses}, function(o,d){
-      BOT.log("*** Got privclasses of "+BOT.simpleNS(o.channel)+" ***");
-      BOT.channel_create(o.channel);
-      BOT.channels[o.channel.toLowerCase()].privclasses = o.privclasses;
+      BOT.log("*** Got privclasses for "+BOT.simpleNS(o.channel)+" ***");
+      BOT.channel_create(o.channel, {privclasses: o.privclasses});
       d(o);
     });
   };
@@ -245,18 +284,20 @@ module.exports = function(){
     BOT.process('join', {channel: BOT.formatNS(ns)}, function(o,d){
       BOT.log("*** "+BOT.config("username")+" has joined "+o.channel+" *");
       BOT.channel_create(o.channel);
+			BOT.chat.self_join(o.channel);
       d(o);
     })
   };
   this.channel_parted = function(ns){
     BOT.process('part', {channel: BOT.formatNS(ns)}, function(o,d){
       BOT.log("*** "+BOT.config("username")+" has left "+BOT._ns(ns)+" *");
+			BOT.chat.self_part(o.channel);
       d(o);
     })
   };
   this.recv = {
     pkt: function(data){
-			BOT.process("recv:pkt", { data: data }, function(o,d){
+			BOT.process("recv.pkt", { data: data }, function(o,d){
 				var data = o.data,
 					ns = data.param,
 					body = data.body,
@@ -293,14 +334,15 @@ module.exports = function(){
 	          BOT.recv.kicked(ns,param,args.by,chunks.pop());
 	          break;
 	        case "default":
-	          BOT.log(BOT.config("username")+"<RECV<ERROR<UNKNOWN_RECV<"+cmd)
+	          BOT.log("RECV ERROR: Recieved unknown cmd: "+cmd)
 	      }
 				d(o);
 			});
     },
     msg: function(ns,from,content){
-      BOT.process('recv:msg', {channel: BOT.ns_(ns), from: from, text: BOT.formatMsg(content)}, function(o,d){
+      BOT.process('recv.msg', {channel: BOT.ns_(ns), from: from, text: BOT.formatMsg(content)}, function(o,d){
         this.logMsg(o.channel, "<"+o.from+"> "+o.text);
+				BOT.chat.msg(o.channel, o.from, o.text);
         var trig = BOT.config("trigger"), text = o.text;
         if(text.indexOf(trig)==0){
           if(content.indexOf(trig+":")==0)trig+=":";
@@ -313,34 +355,39 @@ module.exports = function(){
       });
     },
     action: function(ns, from, content){
-      BOT.process('recv:action', {channel: ns, 'from': from, 'text': BOT.formatMsg(content)},
+      BOT.process('recv.action', {channel: ns, 'from': from, 'text': BOT.formatMsg(content)},
       function(o,d){
         BOT.logMsg(o.channel, "* "+o.from+" "+o.text);
+				BOT.chat.action(o.channel, o.from, o.text);
       });
     },
     join: function(ns, user, args){
-      BOT.process('recv:join', {channel: ns, 'user': user, args: args},
+      BOT.process('recv.join', {channel: ns, 'user': user, args: args},
       function(o,d){
         BOT.logMsg(o.channel, "** "+o.user+" has joined");
+				BOT.chat.join(o.channel, o.user);
       });
     },
     part: function(ns, user, args){
-      BOT.process('recv:part', {channel: ns, 'user': user, args: args},
+      BOT.process('recv.part', {channel: ns, 'user': user, args: args},
       function(o,d){
         BOT.logMsg(o.channel, "** "+o.user+" has left");
+				BOT.chat.part(o.channel, o.user, o.args.r?o.args.r:"");
       });
     },
     kicked: function(ns, user, by, reason){
-      BOT.process('recv:kicked', {channel: ns, 'user': user, 'by': by, 'reason': BOT.formatMsg(reason)},
+      BOT.process('recv.kicked', {channel: ns, 'user': user, 'by': by, 'reason': BOT.formatMsg(reason)},
       function(o,d){
         BOT.logMsg(o.channel, "** "+o.user+" was kicked by "+o.by+" * "+o.reason);
-      });
+				BOT.chat.kicked(o.channel, o.user, o.by, o.reason);
+			});
     },
     privchg: function(ns, user, args){
-      BOT.process('recv:privchg', {channel: ns, 'user': user, args: args},
+      BOT.process('recv.privchg', {channel: ns, 'user': user, args: args},
       function(o,d){
         BOT.logMsg(o.channel, "** "+o.user+" was promoted to "+o.args.pc+" by "+o.args.by+" *");
-      });
+				BOT.chat.privchange(o.channel, o.user, o.args.by, o.args.pc);
+			});
     }
   };
 }

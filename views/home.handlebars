@@ -1,11 +1,5 @@
-<h1>Jester Control Panel</h1>
-{{#if auth_error}}
-  <div><b>Auth Error:</b> {{auth_error}}</div>
-{{/if}}
-{{#if token}}
-  <div><b>dAmn Token:</b> {{token}}</div>
-  <div><b>Username:</b> {{username}}</div>
-  <button onclick="Jester.connect()">Run Bot</button>
-{{else}}
-  <a href="{{auth_url}}">Login with DeviantART</a>
-{{/if}}
+<div id="controlpanel"></div>
+{{#each babel_scripts}}
+  <script type="text/babel" src="{{this}}"></script>
+{{/each}}
+<script type="text/babel" src="{{init_script}}"></script>

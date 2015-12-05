@@ -1,0 +1,2 @@
+CP.init();
+BOT.init();

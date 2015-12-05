@@ -1,0 +1,328 @@
+body, html{
+  margin: 0;
+  padding: 0;
+  font-family: Verdana, sans-serif;
+  background-color: #f2f2f2;
+  font-size: 9pt;
+}
+.NavBar{
+  background-color: #000000;
+  color: white;
+  overflow: auto;
+  height: 50px;
+}
+.Logo{
+  float: left;
+  padding: 15px 20px;
+  line-height: 1.5rem;
+  font-style: italic;
+  font-size: 1.75em;
+  color: #F7590A;
+}
+.NavButtonsList{
+  float: left;
+  overflow: auto;
+  list-style: none;
+  margin: 0;
+  padding: 10px 0px;
+}
+.NavButton{
+  float: left;
+  margin-right: 10px;
+}
+.NavButton span,
+.NavButton a{
+  padding: 2px 10px;
+  display: block;
+  border: 3px solid;
+  border-radius: 6px;
+  line-height: 1.5rem;
+  font-weight: bold;
+}
+.NavButton span{
+  background-color: #F7590A;
+  border-color: #F7590A;
+  color: rgba(0,0,0,0.66);
+}
+.NavButton a{
+  background-color: #3D4040;
+  border-color: #3D4040;
+  color: rgba(255,255,255,0.75);
+  text-decoration: none;
+}
+.NavButton a:hover{
+  background-color: #7D8080;
+  border-color: #7D8080;
+  color: white;
+}
+.BotStatus{
+  float:right;
+  padding: 10px 10px;
+}
+.LoginButton,
+.LogoutButton,
+.ConnectButton,
+.DisconnectButton{
+  display: block;
+  padding: 2px 10px;
+  background-color: #4DC47D;
+  color: rgba(0,0,0,0.66);
+  border: 3px solid #4DC47D;
+  border-radius: 6px;
+  font-weight: bold;
+  line-height: 1.5rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.LoginButton:hover,
+.LogoutButton:hover,
+.ConnectButton:hover,
+.DisconnectButton:hover{
+  color: white;
+}
+.BotUsername{
+  background-color: #3D4040;
+  color: #4DC47D;
+  text-decoration: none;
+  padding: 2px 10px;
+  border: 3px solid #3D4040;
+  border-radius: 6px;
+  line-height: 1.5rem;
+  font-weight: bold;
+  margin-right: 10px;
+}
+.BotUsername,
+.ConnectButton,
+.DisconnectButton{
+  float:left;
+}
+#controlpanel,
+.ControlPanel,
+.Page,
+.LogPage,
+.ChatroomPage,
+.Chatroom,
+.ChatBody,
+.ChatMembers,
+.ChatIO,
+.ChatInput,
+.ChatMessageList,
+.ChatTopic{
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: auto;
+}
+.ChatroomPage,
+.LogPage{
+  top: 50px;
+}
+.LogPage{
+  padding: 5px;
+  overflow-y: auto;
+}
+.LogMessage{
+  padding: 5px;
+  border-bottom: 1px solid #DDDDDD;
+  font-family: monospace;
+  margin-bottom: 3px;
+  background-color: white;
+}
+.ChatTabs{
+  height: 30px;
+  padding: 5px 10px;
+  padding-bottom: 0px;
+  background-color: #607465;
+}
+.ChatTab{
+  float: left;
+  margin-right: 4px;
+}
+.ChatTab span,
+.ChatTab a{
+  display: block;
+  text-decoration: none;
+  line-height: 20px;
+  padding: 5px 10px;
+  background-color: #d0dbd0;
+  border-top-left-radius: 6px;
+  border-top-right-radius: 6px;
+}
+
+.ChatTab span{
+  font-weight: bold;
+}
+.ChatTab a{
+  padding-bottom: 4px;
+  border-bottom: 1px solid #8ea491;
+  cursor: pointer;
+}
+.ChatTab a:hover{
+  background-color: #e0ebe0;
+}
+
+.Chatroom{
+  top: 35px;
+  background-color: #d0dbd0;
+}
+.ChatTitle{
+  height: 44px;
+  overflow: auto;
+}
+.ChatTitle,
+.ChatBody{
+  margin-left: 10px;
+}
+.ChatBody{
+  top: 50px;
+}
+.ChatIO{
+  right: 200px;
+  background-color: #dce7dc;
+}
+.ChatInput{
+  top: auto;
+  height: 50px;
+  background-color: #d0dbd0;
+}
+.ChatTopic, .ChatTitle{
+  padding: 3px;
+}
+.ChatTopic {
+  bottom: auto;
+  height: 44px;
+  overflow: auto;
+  background-color: #bbc6b9;
+  border: 1px solid #9eaea0;
+}
+.ChatMessageList{
+  top: 50px;
+  bottom: 50px;
+  overflow-y: auto;
+  border: 1px solid #9eaea0;
+  border-top: 0;
+}
+.Messages{
+  position: absolute;
+  bottom: 0;
+}
+.ChatMembers{
+  left: auto;
+  width: 200px;
+  overflow: auto;
+}
+.ChatMembers h2{
+  font-size: 1em;
+  margin: 0;
+  padding: 5px 10px;
+  background-color: rgba(0,0,0,0.1);
+}
+.ChatMembers ul{
+  list-style: none;
+  margin: 0;
+  padding: 10px 5px 5px 10px;
+}
+.ChatMember{
+  padding-bottom: 5px;
+}
+.ChatMessage{
+  padding: 2px;
+}
+.ChatMessageList .Messages{
+
+}
+.ChatMessage .join .user,
+.ChatMessage .join.self .text,
+.ChatMessage .part .user,
+.ChatMessage .part.self .text,
+.ChatMessage .msg .user,
+.ChatMessage .action .user,
+.ChatMessage .kicked .user,
+.ChatMessage .kicked .text,
+.ChatMessage .kicked .by,
+.ChatMessage .privchange{
+  font-weight: bold;
+}
+.ChatMessage .join,
+.ChatMessage .part{
+  color: #88938d;
+}
+.ChatMessage .action,
+.ChatMessage .privchange .pc{
+  font-style: italic;
+}
+.ChatMessage .msg .user:before{
+  content: "<";
+}
+.ChatMessage .msg .user:after{
+  content: ">";
+}
+.ChatMessage .part .reason:before{
+  content: "[";
+}
+.ChatMessage .part .reason:after{
+  content: "]";
+}
+.ChatMessage .action .user:before{
+  content: "* ";
+}
+.ChatMessage .join .user:before,
+.ChatMessage .part .user:before,
+.ChatMessage .kicked .user:before,
+.ChatMessage .privchange .user:before{
+  content: "** ";
+}
+.ChatMessage .join.self .user:before,
+.ChatMessage .part.self .user:before{
+  content: "*** ";
+}
+.ChatMessage .join.self .text:after,
+.ChatMessage .kicked .by:after,
+.ChatMessage .privchange .by:after{
+  content: " *";
+}
+.ConfigModule {
+  margin: 20px;
+  background-color: white;
+}
+.ConfigRow{
+  padding: 10px 20px;
+  border-top: 1px solid #DDDDDD;
+  overflow: auto;
+}
+.ConfigRow label{
+  display: block;
+  float: left;
+  font-weight: bold;
+  width: 20%;
+}
+.ConfigRow .value{
+  display:block;
+  float: left;
+}
+.ConfigRow .EditButton{
+  float: right;
+}
+.ConfigRow label .subtitle{
+  font-weight: normal;
+  display: block;
+}
+h1{
+  margin: 20px;
+}
+h2{
+  margin: 0 10px;
+  padding: 10px 0;
+}
+.ConfigModule{
+  position: relative;
+}
+.LogoutButton{
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 5px;
+}
