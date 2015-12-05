@@ -33,6 +33,31 @@ function Jester(){
     //"botcheck"
   ];
 
+  var directories = [
+    "./plugins",
+    "./views",
+    "./web",
+    "./web/modules",
+    "./web/modules/css",
+    "./web/modules/js",
+    "./web/plugins",
+    "./web/plugins/js",
+    "./web/plugins/css",
+    "./config"
+  ];
+
+  //
+  // Check that all directories exist, otherwise create them
+  //
+  var dir_index = 0;
+  var fs = require("fs");
+  directories.forEach(function(dir){
+    if(!fs.existsSync(dir)){
+      console.log("*** Making directory: "+dir+" *");
+      fs.mkdirSync(dir);
+    }
+  });
+
   //
   // Add Event Handling
   //
@@ -62,7 +87,8 @@ function Jester(){
       BOT.port = port;
     }
 		BOT.process('run', {start_time: new Date()},function(o,d){
-			BOT.log('Running Jester @ '+o.start_time);
+      console.log();
+      BOT.log('Running Jester @ '+o.start_time);
 			d(o);
 		});
 	};
