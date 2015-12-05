@@ -4,7 +4,7 @@ module.exports = function(){
     var channels = [].slice.call(arguments);
     BOT.config("autojoin", [], true);
     BOT.process("autojoin_append", { channels: channels }, function(o, d){
-      var channels = BOT.config("autojoin").concat(o.channels);
+      var channels = (BOT.config("autojoin")||[]).concat(o.channels);
       var output = [];
       channels.forEach(function(c){
         if(output.indexOf(c)==-1){
