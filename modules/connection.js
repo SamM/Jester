@@ -249,7 +249,6 @@ module.exports = function(){
 				}
 			}
 		}
-		console.log(list)
     BOT.process('members', {channel: BOT.formatNS(ns), 'list': list, 'members': members}, function(o,d){
       BOT.log("*** Got members for "+BOT.simpleNS(o.channel)+" ***");
       BOT.channel_create(o.channel, {members: o.members});
