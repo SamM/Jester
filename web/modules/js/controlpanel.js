@@ -85,9 +85,6 @@ window.ControlPanel = window.CP = new (function(){
         ns = nso.toLowerCase(),
         data = obj.data,
         safe = obj.safe;
-    if(obj.data.members){
-      console.log(obj.data.members);
-    }
     if(CP.channels[ns]){
       for(var key in data){
         var value = data[key];

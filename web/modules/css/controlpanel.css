@@ -117,6 +117,11 @@ body, html{
   height: auto;
 }
 .ChatroomPage,
+.ChatroomPage a,
+.ChatroomPage a:visited{
+  color: #2c3635;
+}
+.ChatroomPage,
 .LogPage{
   top: 50px;
 }
@@ -180,7 +185,7 @@ body, html{
   top: 50px;
 }
 .ChatIO{
-  right: 200px;
+  right: 150px;
   background-color: #dce7dc;
 }
 .ChatInput{
@@ -210,8 +215,9 @@ body, html{
 }
 .ChatMembers{
   left: auto;
-  width: 200px;
+  width: 150px;
   overflow: auto;
+  font-size: 0.85em;
 }
 .ChatMembers h2{
   font-size: 1em;
