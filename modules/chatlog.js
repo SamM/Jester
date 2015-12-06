@@ -51,10 +51,11 @@ module.exports = function(){
     BOT.chat.log(channel, msg);
   };
 
-  BOT.chat.join = function(channel, user){
+  BOT.chat.join = function(channel, user, args){
     var msg = {
       type: "join",
-      user: user
+      user: user,
+      args: args
     };
     BOT.chat.log(channel, msg);
   };

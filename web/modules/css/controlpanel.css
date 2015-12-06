@@ -59,6 +59,14 @@ body, html{
   float:right;
   padding: 10px 10px;
 }
+.EventTicker {
+  height: 25px;
+  background-color: #333333;
+  color: white;
+  line-height: 25px;
+  padding-left: 10px;
+  overflow-y: auto;
+}
 .LoginButton,
 .LogoutButton,
 .ConnectButton,
@@ -106,8 +114,7 @@ body, html{
 .ChatMembers,
 .ChatIO,
 .ChatInput,
-.ChatMessageList,
-.ChatTopic{
+.ChatMessageList{
   position: absolute;
   top: 0;
   bottom: 0;
@@ -123,7 +130,7 @@ body, html{
 }
 .ChatroomPage,
 .LogPage{
-  top: 50px;
+  top: 75px;
 }
 .LogPage{
   padding: 5px;
@@ -175,7 +182,6 @@ body, html{
 }
 .ChatTitle{
   height: 44px;
-  overflow: auto;
 }
 .ChatTitle,
 .ChatBody{
@@ -193,25 +199,55 @@ body, html{
   height: 50px;
   background-color: #d0dbd0;
 }
-.ChatTopic, .ChatTitle{
+.ChatInput form{
+  margin: 10px 0 0 0;
+  padding: 0 2px 0 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: auto;
+  border: 1px solid #9eaea0;
+  background-color: white;
+}
+.TextInput {
+  margin: 0;
+  width: 100%;
+  border: 0;
+  line-height: 25px;
+  text-indent: 3px;
+}
+.ChatTopic, .ChatTitleInner{
   padding: 3px;
 }
 .ChatTopic {
-  bottom: auto;
-  height: 44px;
-  overflow: auto;
   background-color: #bbc6b9;
   border: 1px solid #9eaea0;
+  position: relative;
+  z-index: 1;
 }
 .ChatMessageList{
-  top: 50px;
+  top: 0;
   bottom: 50px;
   overflow-y: auto;
   border: 1px solid #9eaea0;
   border-top: 0;
 }
+.ChatMessageListOuter{
+  display: table;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+.ChatMessageListInner {
+  display: table-row;
+  width: 100%;
+  height: 100%;
+  vertical-align: bottom;
+}
 .Messages{
-
+  width: 100%;
+  display: table-cell;
+  vertical-align: bottom;
 }
 .ChatMembers{
   left: auto;
@@ -223,7 +259,7 @@ body, html{
   font-size: 1em;
   margin: 0;
   padding: 5px 10px;
-  background-color: rgba(0,0,0,0.1);
+  background-color: #bccbba;
 }
 .ChatMembers ul{
   list-style: none;

@@ -10,7 +10,11 @@ module.exports = function(){
     "connected",
     "disconnect",
     "disconnected",
-    "channel_create"
+    "channel_create",
+    "join",
+    "part",
+    "recv.join",
+    "recv.part"
   ];
 
   var normal_events = [

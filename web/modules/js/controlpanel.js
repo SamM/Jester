@@ -33,8 +33,32 @@ window.ControlPanel = window.CP = new (function(){
   this.log_messages = [];
   this.log = function(message){
     CP.log_messages.push(message);
+    CP.ticker.queue(message);
     CP.render("log");
   };
+
+  //
+  // Event Ticker
+  //
+  this.ticker = {};
+  this.ticker.events = [];
+  this.ticker.timeout = null;
+  this.ticker.queue = function(msg){
+    CP.ticker.events.push(msg);
+    if(!CP.ticker.timeout){
+      CP.ticker.tick();
+    }
+  };
+  this.ticker.tick = function(){
+    clearTimeout(CP.ticker.timeout);
+    CP.ticker.timeout = null;
+
+    if(CP.ticker.events.length > 1){
+      CP.ticker.events.shift();
+      CP.ticker.timeout = setTimeout(CP.ticker.tick, 500 / CP.ticker.events.length);
+      CP.render();
+    }
+  }
 
   //
   // dAmn Connection Events
@@ -47,6 +71,74 @@ window.ControlPanel = window.CP = new (function(){
     CP.data.connected = false;
     CP.render();
   };
+  this.dAmn.join = function(o){
+    var ns = o.channel.toLowerCase();
+    if(CP.channels[ns]){
+      CP.channels[ns].joined = true;
+      CP.data.current_channel = ns;
+      CP.render("chat");
+    }
+  }
+  this.dAmn.part = function(o){
+    var ns = o.channel.toLowerCase();
+    var next = "";
+    var nss = Object.keys(CP.channels);
+    var nsi = nss.indexOf(ns);
+    function searchEnd(){
+      for(var i = nsi+1; i<nss.length; i++){
+        if(CP.channels[nss[i]].joined){
+          return nss[i];
+        }
+      }
+      return "";
+    }
+    function searchStart(){
+      for(var i = nsi-1; i>=0; i--){
+        if(CP.channels[nss[i]].joined){
+          return nss[i];
+        }
+      }
+      return "";
+    }
+    if(nsi == 0){
+      next = searchEnd();
+    }else{
+      next = searchStart();
+      if(next == "") next = searchEnd();
+    }
+    if(CP.channels[ns]){
+      CP.channels[ns].joined = false;
+      CP.data.current_channel = next;
+      CP.render("chat");
+    }
+  }
+  this.dAmn.recv = {};
+  this.dAmn.recv.join = function(o){
+    var ns = o.channel.toLowerCase();
+    if(CP.channels[ns]){
+      if(CP.channels[ns].members[o.user]){
+        CP.channels[ns].members[o.user].instances++;
+      }else{
+        o.args.username = o.user;
+        delete o.args.s;
+        o.args.instances = 1;
+        CP.channels[ns].members[o.user] = o.args;
+      }
+      CP.render("chat");
+    }
+  }
+  this.dAmn.recv.part = function(o){
+    var ns = o.channel.toLowerCase();
+    if(CP.channels[ns]){
+      if(CP.channels[ns].members[o.user]){
+        CP.channels[ns].members[o.user].instances--;
+        if(CP.channels[ns].members[o.user].instances == 0){
+          delete CP.channels[ns].members[o.user];
+        }
+        CP.render("chat");
+      }
+    }
+  }
 
   //
   // Config
@@ -108,6 +200,7 @@ window.ControlPanel = window.CP = new (function(){
       }
     }else{
       var channel = {};
+      channel.joined = true;
       channel.messages = data.messages?data.messages:[];
       channel.topic = data.topic?data.topic:"";
       channel.title = data.title?data.title:"";
@@ -175,7 +268,7 @@ window.ControlPanel = window.CP = new (function(){
     }
     this.refresh();
     ReactDOM.render(
-      <ControlPanelComp data={this.data} channels={this.channels} pages={this.pages} log={this.log_messages}/>,
+      <ControlPanelComp data={this.data} channels={this.channels} pages={this.pages} log={this.log_messages} events={this.ticker.events}/>,
       document.getElementById(this.el_id)
     );
   };
@@ -216,6 +309,28 @@ window.ControlPanel = window.CP = new (function(){
   }
 
 })();
+
+//
+// ControlPanelComp Component
+//
+var ControlPanelComp = React.createClass({
+  render: function(){
+    var data = this.props.data;
+    var pages =this.props.pages;
+    var log = this.props.log;
+    var page = pages[data.current_page];
+    var channels = this.props.channels;
+    var events = this.props.events;
+    var Page_Component = page.component?page.component:EmptyPage;
+    return (
+      <div className="ControlPanel">
+        <NavBar pages={pages} data={data}/>
+        <EventTicker events={events} />
+        <Page_Component page={page} data={data} log={log} channels={channels}/>
+      </div>
+    );
+  }
+});
 
 //
 // NavBar Component
@@ -283,6 +398,20 @@ var BotStatus = React.createClass({
 });
 
 //
+// EventTicker Component
+//
+var EventTicker = React.createClass({
+  render: function(){
+    var events = this.props.events;
+    var message = events[0];
+    var text = message?message.text:"";
+    return (
+      <div className="EventTicker">{text}</div>
+    );
+  }
+});
+
+//
 // EmptyPage Component
 //
 var EmptyPage = React.createClass({
@@ -297,6 +426,26 @@ var EmptyPage = React.createClass({
 // LogPage Component
 //
 var LogPage = React.createClass({
+  scrollElement: function(){
+    var node = ReactDOM.findDOMNode(this);
+    window.requestAnimationFrame(function(){
+      if(node){
+        node.scrollTop = node.scrollHeight;
+      }
+    });
+  },
+  componentDidMount: function() {
+    this.scrollElement();
+  },
+  componentWillUpdate: function() {
+    var node = ReactDOM.findDOMNode(this);
+    this.shouldScrollBottom = node.scrollTop + node.offsetHeight >= node.scrollHeight;
+  },
+  componentDidUpdate: function() {
+    if (this.shouldScrollBottom) {
+      this.scrollElement();
+    }
+  },
   render: function(){
     return (
       <div className="LogPage">
@@ -357,7 +506,9 @@ var ChatTabs = React.createClass({
     var tabs = [];
     for(var ns in channels){
       var current = ns.toLowerCase() == current_channel.toLowerCase();
-      tabs.push(<ChatTab ns={ns} key={ns} current={current} />);
+      if(channels[ns].joined){
+        tabs.push(<ChatTab ns={ns} key={ns} current={current} />);
+      }
     }
     return (
       <div className="ChatTabs">
@@ -395,12 +546,31 @@ var ChatTab = React.createClass({
 // Chatroom Component
 //
 var Chatroom = React.createClass({
+  updateTitleHeight: function(){
+    var title = ReactDOM.findDOMNode(this.refs["title"]);
+    var inner = ReactDOM.findDOMNode(this.refs["title_inner"]);
+    var body = ReactDOM.findDOMNode(this.refs["body"]);
+    title.style.height = body.style.top = inner.offsetHeight+"px";
+  },
+  componentDidMount: function() {
+    this.updateTitleHeight();
+  },
+  componentDidUpdate: function() {
+    this.updateTitleHeight();
+  },
   render: function(){
     var channel = this.props.channel;
+    if(!channel.joined){
+      return (
+        <div className="Chatroom Empty"></div>
+      );
+    }
     return (
       <div className="Chatroom">
-        <div className="ChatTitle" dangerouslySetInnerHTML={{__html: channel.title}}></div>
-        <div className="ChatBody">
+        <div className="ChatTitle" ref="title">
+          <div className="ChatTitleInner" ref="title_inner" dangerouslySetInnerHTML={{__html: channel.title}}></div>
+        </div>
+        <div className="ChatBody" ref="body">
           <div className="ChatIO">
             <div className="ChatTopic" dangerouslySetInnerHTML={{__html: channel.topic}}></div>
             <ChatMessageList ns={channel.ns} messages={channel.messages} />
@@ -417,15 +587,39 @@ var Chatroom = React.createClass({
 // ChatMessageList Component
 //
 var ChatMessageList = React.createClass({
+  scrollElement: function(){
+    var node = ReactDOM.findDOMNode(this);
+    window.requestAnimationFrame(function(){
+      if(node){
+        node.scrollTop = node.scrollHeight;
+      }
+    });
+  },
+  componentDidMount: function() {
+    this.scrollElement();
+  },
+  componentWillUpdate: function() {
+    var node = ReactDOM.findDOMNode(this);
+    this.shouldScrollBottom = node.scrollTop + node.offsetHeight >= node.scrollHeight;
+  },
+  componentDidUpdate: function() {
+    if (this.shouldScrollBottom) {
+      this.scrollElement();
+    }
+  },
   render: function(){
     var messages = this.props.messages;
     var ns = this.props.ns;
     return (
       <div className="ChatMessageList">
-        <div className="Messages">
-        {messages.map(function(msg, i){
-          return <ChatMessage key={i} message={msg} ns={ns} />;
-        })}
+        <div className="ChatMessageListOuter">
+          <div className="ChatMessageListInner">
+            <div className="Messages">
+            {messages.map(function(msg, i){
+              return <ChatMessage key={i} message={msg} ns={ns} />;
+            })}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -503,10 +697,24 @@ var ChatMessage = React.createClass({
 // ChatInput Component
 //
 var ChatInput = React.createClass({
+  getInitialState: function(){
+    return {value : ""};
+  },
+  handleChange: function(event){
+    this.setState({value: event.target.value});
+  },
+  sendMessage: function(event){
+    event.preventDefault();
+    BOT.send.parse(this.props.ns, this.state.value);
+    this.setState({value: ""});
+  },
   render: function(){
+    var value = this.state.value;
     return (
       <div className="ChatInput">
-        <input type="text" className="TextInput" />
+        <form className="SendForm" onSubmit={this.sendMessage}>
+          <input type="text" className="TextInput" value={value} onChange={this.handleChange} />
+        </form>
       </div>
     )
   }
@@ -612,26 +820,6 @@ var ConfigRow = React.createClass({
   }
 });
 
-//
-// ControlPanelComp Component
-//
-var ControlPanelComp = React.createClass({
-  render: function(){
-    var data = this.props.data;
-    var pages =this.props.pages;
-    var log = this.props.log;
-    var page = pages[data.current_page];
-    var channels = this.props.channels;
-    var Page_Component = page.component?page.component:EmptyPage;
-    return (
-      <div className="ControlPanel">
-        <NavBar pages={pages} data={data}/>
-        <Page_Component page={page} data={data} log={log} channels={channels}/>
-      </div>
-    );
-  }
-});
-
 // Index
 ControlPanel.add_page("log",{
   path: "/",
@@ -646,9 +834,7 @@ ControlPanel.add_page("chat",{
   route: function(ctx, next){
     CP.data.current_channel = "ns:sumobot";
     next();
-  },
-  need_auth: true,
-  need_connection: true
+  }
 });
 // Configure
 ControlPanel.add_page("config",{
