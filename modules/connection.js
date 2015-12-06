@@ -32,22 +32,17 @@ module.exports = function(){
       d(o);
     });
 	};
-  var chunk = "";
-  this.read = function(pkt){
-		BOT.process("read", {pkt: pkt}, function(o,d){
-			var pkt = o.pkt.toString().replace(/\0/g,"\u0000").replace(/\r/g,"\u0000");
-			if(false && pkt.indexOf("\u0000")<0){
-	      chunk = chunk + pkt;
-				d(o);
-				return;
-	    }
-	    if(chunk.length){
-	      pkt = chunk + pkt;
-	      chunk = "";
-	    }
-	    var pkts = pkt.split("\u0000");
-	    for(var i=0;i<pkts.length;i++)
-	      BOT.read_pkt(pkts[i]);
+  var data = "";
+  this.read = function(chunk){
+		BOT.process("read", {chunk: chunk}, function(o,d){
+			var chunk = o.chunk.toString().replace(/\0/g,"\u0000").replace(/\r/g,"\u0000");
+			data += chunk;
+			while(data.indexOf("\u0000")>-1){
+				var index = data.indexOf("\u0000");
+				var pkt = data.slice(0, index);
+				data = data.slice(index+1);
+				BOT.read_pkt(pkt);
+			}
 			d(o);
 		});
   };
@@ -96,8 +91,8 @@ module.exports = function(){
 	    var param = data.param;
 	    var body = data.body;
 	    var args = data.args;
-			BOT.DEBUG && BOT.log(data);
-	    BOT.DEBUG && BOT.log([BOT.config("username"),"READ",data.raw].join("<"));
+			//BOT.DEBUG && BOT.log(data);
+	    BOT.DEBUG && BOT.log(data.raw);
 	    switch(cmd){
 	      case "dAmnServer":
 	        BOT.log("*** Connection to dAmn "+param+" established ***");
@@ -254,6 +249,7 @@ module.exports = function(){
 				}
 			}
 		}
+		console.log(list)
     BOT.process('members', {channel: BOT.formatNS(ns), 'list': list, 'members': members}, function(o,d){
       BOT.log("*** Got members for "+BOT.simpleNS(o.channel)+" ***");
       BOT.channel_create(o.channel, {members: o.members});
@@ -345,8 +341,6 @@ module.exports = function(){
 				BOT.chat.msg(o.channel, o.from, o.text);
         var trig = BOT.config("trigger"), text = o.text;
         if(text.indexOf(trig)==0){
-          if(content.indexOf(trig+":")==0)trig+=":";
-          if(content.indexOf(trig+" ")==0)trig+=" ";
           var params = text.slice(trig.length).split(" "),
             cmd = params.shift();
           BOT.command(cmd, o.channel, o.from, params);
