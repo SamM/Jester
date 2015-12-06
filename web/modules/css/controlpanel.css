@@ -206,8 +206,7 @@ body, html{
   border-top: 0;
 }
 .Messages{
-  position: absolute;
-  bottom: 0;
+
 }
 .ChatMembers{
   left: auto;

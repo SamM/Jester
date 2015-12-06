@@ -85,6 +85,9 @@ window.ControlPanel = window.CP = new (function(){
         ns = nso.toLowerCase(),
         data = obj.data,
         safe = obj.safe;
+    if(obj.data.members){
+      console.log(obj.data.members);
+    }
     if(CP.channels[ns]){
       for(var key in data){
         var value = data[key];
@@ -399,10 +402,10 @@ var Chatroom = React.createClass({
     var channel = this.props.channel;
     return (
       <div className="Chatroom">
-        <div className="ChatTitle">{channel.title}</div>
+        <div className="ChatTitle" dangerouslySetInnerHTML={{__html: channel.title}}></div>
         <div className="ChatBody">
           <div className="ChatIO">
-            <div className="ChatTopic">{channel.topic}</div>
+            <div className="ChatTopic" dangerouslySetInnerHTML={{__html: channel.topic}}></div>
             <ChatMessageList ns={channel.ns} messages={channel.messages} />
             <ChatInput ns={channel.ns} draft={channel.draft} />
           </div>
@@ -443,11 +446,11 @@ var ChatMessage = React.createClass({
     var inner = null;
     switch(msg.type){
       case "msg":
-      inner = <div className="msg"><span className="user">{msg.user}</span> <span className="text">{msg.text}</span></div>;
+      inner = <div className="msg"><span className="user">{msg.user}</span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
       break;
 
       case "action":
-      inner = <div className="action"><span className="user">{msg.user}</span> <span className="text">{msg.text}</span></div>;
+      inner = <div className="action"><span className="user">{msg.user}</span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
       break;
 
       case "join":
@@ -468,7 +471,7 @@ var ChatMessage = React.createClass({
       break;
 
       case "kicked":
-      inner = <div className="kicked"><span className="user">{msg.user}</span> <span className="text">was kicked by</span> <span className="by">{msg.by}</span> <span className="reason">{msg.reason}</span></div>;
+      inner = <div className="kicked"><span className="user">{msg.user}</span> <span className="text">was kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
       break;
 
       case "privchange":
@@ -484,7 +487,7 @@ var ChatMessage = React.createClass({
       break;
 
       case "self_kicked":
-      inner = <div className="kicked self"><span className="user">You</span> <span className="text">have been kicked by</span> <span className="by">{msg.by}</span> <span className="reason">{msg.reason}</span></div>;
+      inner = <div className="kicked self"><span className="user">You</span> <span className="text">have been kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
       break;
 
       default:
