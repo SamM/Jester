@@ -5,8 +5,8 @@ module.exports = function(){
       if(!o.handled){
         BOT.process('command:'+o.command, {'command': o.command, 'channel': o.channel, 'from': o.from, 'params': o.params, 'handled': 0}, function(ob, done){
           if(!ob.handled){
-            BOT.events.emit("unhandled_command", ob);
-            BOT.send.msg_to(ob.channel, ob.from, 'Command not recognized: <b>'+ob.command+'</b>');
+            BOT.process("unhandled_command", ob);
+            //BOT.send.msg_to(ob.channel, ob.from, 'Command not recognized: <b>'+ob.command+'</b>');
             ob.handled++;
             o.handled++;
           }
@@ -18,14 +18,14 @@ module.exports = function(){
       }
     });
   };
-  this.before_command = function(command, fn){
+  this.command.before = function(command, fn){
     BOT.before('command:'+command, function(o,d){
       o.handled++;
       fn(o);
       d(o);
     });
   };
-  this.after_command = function(command, fn){
+  this.command.after = function(command, fn){
     BOT.after('command:'+command, function(o,d){
       o.handled++;
       fn(o);

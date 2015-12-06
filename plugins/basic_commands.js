@@ -7,10 +7,14 @@ module.exports = function(){
     function cmd(o){
       if(!plugin.enabled) return;
     	if(BOT.checkAuth(o.from, 1)){
-    		BOT.send.msg(o.channel, o.params.join(" "));
+        var channel = o.channel;
+        if(o.params[0][0]=="#"){
+          channel = BOT.formatNS(o.params.shift());
+        }
+    		BOT.send.msg(channel, o.params.join(" "));
     	}
     }
-    this.before_command('say', cmd);
+    this.command.before('say', cmd);
 
   });
 
@@ -23,8 +27,8 @@ module.exports = function(){
     		BOT.send.action(o.channel, o.params.join(" "));
     	}
     }
-    this.before_command('action', cmd);
-    this.before_command('me', cmd);
+    this.command.before('action', cmd);
+    this.command.before('me', cmd);
 
   });
 
@@ -39,7 +43,37 @@ module.exports = function(){
     		});
     	}
     }
-    this.before_command('join', cmd);
+    this.command.before('join', cmd);
+
+  });
+
+  // Autojoin
+  BOT.plugin("autojoin", {enabled: true}, function(plugin){
+
+    function cmd(o){
+      if(!plugin.enabled) return;
+      if(BOT.checkAuth(o.from, 2)){
+        switch(o.params[0]){
+          case "remove":
+          if(o.params.length > 1){
+            BOT.autojoin.remove.apply(BOT, o.params.slice(1));
+          }
+          break;
+
+          case "add":
+          if(o.params.length > 1){
+            BOT.autojoin.add.apply(BOT, o.params.slice(1));
+          }
+          break;
+
+          case "list":
+          default:
+          // Return all of the channels in autojoin
+          break;
+        }
+      }
+    }
+    this.command.before('autojoin', cmd);
 
   });
 
@@ -50,7 +84,7 @@ module.exports = function(){
       if(!plugin.enabled) return;
     	this.send.chat(o.from);
     }
-    this.before_command('chat', cmd);
+    this.command.before('chat', cmd);
 
   });
 
@@ -65,7 +99,7 @@ module.exports = function(){
     		});
     	}
     }
-    this.before_command('part', cmd);
+    this.command.before('part', cmd);
 
   });
 
@@ -78,8 +112,8 @@ module.exports = function(){
     		BOT.send.disconnect();
     	}
     }
-    this.before_command('quit', cmd);
-    this.before_command('disconnect', cmd);
+    this.command.before('quit', cmd);
+    this.command.before('disconnect', cmd);
 
   });
 
@@ -96,7 +130,7 @@ module.exports = function(){
     			BOT.send.kick(o.channel,o.params.shift(),o.params.join(" "));
     	}
     }
-    this.before_command('kick', cmd);
+    this.command.before('kick', cmd);
 
   });
 
@@ -113,8 +147,8 @@ module.exports = function(){
         }
     	}
     }
-    this.before_command('trig', cmd);
-    this.before_command('trigchg', cmd);
+    this.command.before('trig', cmd);
+    this.command.before('trigchg', cmd);
 
   });
 

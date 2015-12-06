@@ -3,6 +3,11 @@ var md5 = require('MD5');
 module.exports = function(){
   var BOT = this;
 
+  //
+  // This doesn't work yet so it is disabled
+  //
+  return;
+
 	BOT.plugin('botcheck', {reply: 'I\'m a bot'}, function(plugin){
 		function botcheckResponse(from){
 			return 'BDS:BOTCHECK:RESPONSE:'+[

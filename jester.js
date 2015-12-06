@@ -29,7 +29,8 @@ function Jester(){
 
   var plugins = [
     "basic_commands",
-    "antikick"
+    "antikick",
+    "nametrigger"
     //"botcheck"
   ];
 
