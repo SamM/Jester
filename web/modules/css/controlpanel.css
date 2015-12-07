@@ -19,6 +19,9 @@ body, html{
   font-size: 1.75em;
   color: #00cccc;
 }
+.Logo .accent{
+  color: #DDDDDD;
+}
 .NavButtonsList{
   float: left;
   overflow: auto;

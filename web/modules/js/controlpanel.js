@@ -425,7 +425,7 @@ var Logo = React.createClass({
       color: color
     };
     return (
-      <div className="Logo" style={style}>Jester</div>
+      <div className="Logo" style={style}>{'{'}<span className="accent">J</span>e<span className="accent">s</span>ter{'}'}</div>
     );
   }
 });
