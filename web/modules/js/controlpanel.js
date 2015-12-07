@@ -28,6 +28,11 @@ window.ControlPanel = window.CP = new (function(){
   this.chat = {};
 
   //
+  // Changing Hue
+  //
+  this.hue = 0;
+
+  //
   // Log Messages
   //
   this.log_messages = [];
@@ -290,9 +295,10 @@ window.ControlPanel = window.CP = new (function(){
     if(typeof only_for_page == "string"){
       if(this.data.current_page != only_for_page) return;
     }
+    CP.hue = (CP.hue+5)%360;
     this.refresh();
     ReactDOM.render(
-      <ControlPanelComp data={this.data} channels={this.channels} pages={this.pages} log={this.log_messages} events={this.ticker.events}/>,
+      <ControlPanelComp data={this.data} hue={this.hue} channels={this.channels} pages={this.pages} log={this.log_messages} events={this.ticker.events}/>,
       document.getElementById(this.el_id)
     );
   };
@@ -364,7 +370,7 @@ var ControlPanelComp = React.createClass({
     var Page_Component = page.component?page.component:EmptyPage;
     return (
       <div className="ControlPanel">
-        <NavBar pages={pages} data={data}/>
+        <NavBar pages={pages} data={data} hue={this.props.hue}/>
         <EventTicker events={events} />
         <Page_Component page={page} data={data} log={log} channels={channels}/>
       </div>
@@ -380,7 +386,7 @@ var NavBar = React.createClass({
     var self = this;
     return (
       <div className="NavBar">
-        <Logo />
+        <Logo hue={this.props.hue} />
         <ul className="NavButtonsList">
         {ObjToArr(this.props.pages).map(function(page){
           if(page.need_auth && !self.props.data.authorized) return;
@@ -388,7 +394,7 @@ var NavBar = React.createClass({
           if(page.need_connection && !self.props.data.connected) return;
           var current = self.props.data.current_page==page.id;
           return (
-            <NavButton key={page.id} title={page.title} path={page.path} current={current}/>
+            <NavButton key={page.id} title={page.title} path={page.path} current={current} hue={self.props.hue}/>
           );
         })}
         </ul>
@@ -400,9 +406,14 @@ var NavBar = React.createClass({
 
 var NavButton = React.createClass({
   render: function(){
+    var color = "hsl("+[this.props.hue,"100%","80%"].join(",")+")";
+    var style = {
+      backgroundColor: color,
+      borderColor: color
+    };
     var path = "/"+this.props.path.split("/")[1];
     var inner = this.props.current ?
-      <span>{this.props.title}</span> :
+      <span style={style}>{this.props.title}</span> :
       <a href={path}>{this.props.title}</a>;
     return (
       <li className="NavButton">{inner}</li>
@@ -412,8 +423,12 @@ var NavButton = React.createClass({
 
 var Logo = React.createClass({
   render: function(){
+    var color = "hsl("+[this.props.hue,"100%","80%"].join(",")+")";
+    var style = {
+      color: color
+    };
     return (
-      <div className="Logo">Jester</div>
+      <div className="Logo" style={style}>Jester</div>
     );
   }
 });
@@ -716,7 +731,7 @@ var ChatMessage = React.createClass({
         return "cmd-hl";
       }
     }
-    if(config.hilite_bot && -1 != msg.user.search( RegExp("([^A-Za-z]+|^)"+config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","i") ) )
+    if(-1 != msg.user.search( RegExp("([^A-Za-z]+|^)"+config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","i") ) )
       return "self-hl";
     else if(config.hilite_bot && -1 != msg.text.search( RegExp("([^A-Za-z]+|^)"+config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","im") ) )
       return "other-hl";
