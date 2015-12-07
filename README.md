@@ -6,12 +6,12 @@ It features a web-based control panel that you can use to configure the bot, log
 
 #### Getting Started
 ##### Requirements
-In order to run the bot you must have [Node.js](https://nodejs.org/en/) installed. You can download Node.js [here](https://nodejs.org/en/download/).
+In order to run the bot you must have [Node.js](https://nodejs.org/en/) installed. You can [download Node.js here](https://nodejs.org/en/download/).
 When you install Node.js, NPM (Node Package Manager) will also be installed. This will be required for installing the bot.
 
 ##### Downloading the bot
 ###### Using Git
-If you would like to be able to update the bot when changes are made to this repository then the best way to download the bot would be to use [Git](https://git-scm.com/). If you haven't go Git installed yet, you can download it from [here](https://git-scm.com/downloads).
+If you would like to be able to update the bot when changes are made to this repository then the best way to download the bot would be to use [Git](https://git-scm.com/). If you haven't go Git installed yet, you can [download Git here](https://git-scm.com/downloads).
 
 Once you have Git installed, navigate to the folder where you would like the bot to be installed using Command Prompt (Windows) or Terminal (Mac).
 Then run the command `git clone https://github.com/SamM/Jester.git`
