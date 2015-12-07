@@ -181,6 +181,10 @@ module.exports = function(){
 		var ns = BOT.formatNS(ns).toLowerCase();
 		return BOT.channels[ns];
 	};
+	this.channel_destroy = function(ns){
+		var ns = BOT.formatNS(ns).toLowerCase();
+		delete BOT.channels[ns];
+	}
   this.channel_create = function(ns, data, safe){
     BOT.process('channel_create', {ns: BOT.formatNS(ns), data: data?data:{}, safe: safe}, function(o,d){
 			var data = o.data;
@@ -304,6 +308,7 @@ module.exports = function(){
     BOT.process('part', {channel: BOT.formatNS(ns)}, function(o,d){
       BOT.log("*** "+BOT.config("username")+" has left "+BOT._ns(ns)+" *");
 			BOT.chat.self_part(o.channel);
+			BOT.channel_destroy(o.channel);
       d(o);
     })
   };

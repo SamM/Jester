@@ -114,7 +114,8 @@ body, html{
 .ChatMembers,
 .ChatIO,
 .ChatInput,
-.ChatMessageList{
+.ChatMessageList,
+.EmptyChatroomPage{
   position: absolute;
   top: 0;
   bottom: 0;
@@ -123,12 +124,31 @@ body, html{
   width: auto;
   height: auto;
 }
+.EmptyChatroomPage{
+  background-color: #dce7dc;
+  text-align: center;
+  padding-top: 25px;
+}
+.JoinChatroomButton{
+  font-size: 1.75em;
+  border: 2px solid #38463b;
+  background-color: #475c4d;
+  border-radius: 20px;
+  padding: 5px 20px;
+  color: white;
+  cursor: pointer;
+}
+.JoinChatroomButton:hover{
+  background-color: #607465;
+}
 .ChatroomPage,
+.EmptyChatroomPage,
 .ChatroomPage a,
 .ChatroomPage a:visited{
   color: #2c3635;
 }
 .ChatroomPage,
+.EmptyChatroomPage,
 .LogPage{
   top: 75px;
 }

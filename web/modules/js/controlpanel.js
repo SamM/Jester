@@ -539,15 +539,35 @@ var ChatroomPage = React.createClass({
     if(!current_channel || !channels[current_channel]){
       current_channel = Object.keys(channels)[0];
     }
-    if(!current_channel){
+    if(!current_channel || !channels[current_channel].joined){
       return (
-        <div className="ChatroomPage Empty"></div>
+        <EmptyChatroomPage />
       );
     }
     return (
       <div className="ChatroomPage">
         <ChatTabs channels={channels} current_channel={current_channel} />
         <Chatroom channel={channels[current_channel]} />
+      </div>
+    )
+  }
+});
+
+//
+// EmptyChatroomPage Component
+//
+var EmptyChatroomPage = React.createClass({
+  joinChatroom: function(){
+    var ns = prompt("Enter the name of the chatroom you would like to join: ");
+    if(ns != null && ns!=""){
+      BOT.send.join(ns);
+    }
+  },
+  render: function(){
+    return (
+      <div className="EmptyChatroomPage">
+      <h1>No Chatrooms Have Been Joined</h1>
+      <button className="JoinChatroomButton" onClick={this.joinChatroom}>Join a Chatroom</button>
       </div>
     )
   }
