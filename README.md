@@ -13,7 +13,8 @@ When you install Node.js, NPM (Node Package Manager) will also be installed. Thi
 ###### Using Git
 If you would like to be able to update the bot when changes are made to this repository then the best way to download the bot would be to use [Git](https://git-scm.com/). If you haven't go Git installed yet, you can download it from [here](https://git-scm.com/downloads).
 
-Once you have Git installed, navigate to the folder where you would like the bot to be installed using Command Prompt (Windows) or Terminal (Mac). Then run the command `git clone https://github.com/SamM/Jester.git`.
+Once you have Git installed, navigate to the folder where you would like the bot to be installed using Command Prompt (Windows) or Terminal (Mac).
+Then run the command `git clone https://github.com/SamM/Jester.git`
 
 When you want to update the bot, navigate to the bot folder and use the command `git pull origin master` to pull the latest version from Github.
 ###### Downloading the .zip
@@ -30,4 +31,4 @@ Once the bot is installed, you can run the bot by using the command `npm start` 
 Once it is running you will be given a URL that will likely be http://localhost:4000. You can open up this link in a web browser to gain access to the bot control panel. From there you can configure your bot, login with a DeviantART account, and connect your bot to dAmn.
 
 #### Good luck
-I'll leave the rest up to you to figure out. If you do need some help you can find me on DeviantART at http://sumopiggy.deviantart.com and send me a note, or you might be able to find me on dAmn in **#Botdom**.
+I'll leave the rest up to you to figure out. If you do need some help you can find me on DeviantART at http://sumopiggy.deviantart.com and send me a note, or you might be able to find me on dAmn in **[#Botdom](http://chat.deviantart.com/chat/Botdom)**.
