@@ -541,7 +541,7 @@ var ChatroomPage = React.createClass({
     }
     if(!current_channel || !channels[current_channel].joined){
       return (
-        <EmptyChatroomPage />
+        <EmptyChatroomPage data={this.props.data} />
       );
     }
     return (
@@ -564,10 +564,18 @@ var EmptyChatroomPage = React.createClass({
     }
   },
   render: function(){
+    var connected = this.props.data.connected;
+    if(!connected){
+      return (
+        <div className="EmptyChatroomPage">
+          <h1>You Are Not Connected To dAmn</h1>
+        </div>
+      )
+    }
     return (
       <div className="EmptyChatroomPage">
-      <h1>No Chatrooms Have Been Joined</h1>
-      <button className="JoinChatroomButton" onClick={this.joinChatroom}>Join a Chatroom</button>
+        <h1>No Chatrooms Have Been Joined</h1>
+        <button className="JoinChatroomButton" onClick={this.joinChatroom}>Join a Chatroom</button>
       </div>
     )
   }
