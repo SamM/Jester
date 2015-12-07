@@ -7,11 +7,15 @@ module.exports = function(){
   var io = require('socket.io')(server);
   var handlebars = require("express-handlebars");
   var fs = require("fs");
+  var enableDestroy = require('server-destroy');
+
+  enableDestroy(server);
 
   BOT.web = {};
   BOT.web.app = app;
   BOT.web.server = server;
   BOT.web.socket = io;
+
   BOT.config.unset("auth_error");
 
   //
