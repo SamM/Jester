@@ -14,6 +14,11 @@ module.exports=function(){
               delete BOT[key];
           });
 
+          var require_cache_keys = Object.keys(require.cache);
+          require_cache_keys.forEach(function(key){
+            delete require.cache[key];
+          })
+
           BOT.init();
           BOT.run();
         });

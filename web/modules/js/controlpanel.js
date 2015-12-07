@@ -37,9 +37,6 @@ window.ControlPanel = window.CP = new (function(){
   //
   this.log_messages = [];
   this.log = function(message){
-    if(message.text){
-      message.text = CP.removeTags(message.text);
-    }
     CP.log_messages.push(message);
     CP.ticker.queue(message);
     CP.render("log");

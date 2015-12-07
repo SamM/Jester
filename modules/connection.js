@@ -224,24 +224,24 @@ module.exports = function(){
     });
   };
   this.channel_topic = function(ns, text, by, ts){
-    BOT.process('topic', {channel: BOT.formatNS(ns), 'text': this.formatMsg(text), by: by, ts: ts}, function(o,d){
+    BOT.process('topic', {channel: BOT.formatNS(ns), 'text': text, by: by, ts: ts}, function(o,d){
       BOT.log("*** Got topic for "+BOT.simpleNS(o.channel)+" ***");
 			var channel = BOT.get_channel(o.channel);
 			if(channel.topic != ""){
-				BOT.chat.topic(o.channel, o.by, o.text, o.ts);
+				BOT.chat.topic(o.channel, o.by, BOT.msgToHtml(o.text), o.ts);
 			}
-      BOT.channel_create(o.channel, {topic: o.text});
+      BOT.channel_create(o.channel, {topic: BOT.msgToHtml(o.text)});
       d(o);
     });
   };
   this.channel_title = function(ns, text, by, ts){
-    BOT.process('title', {channel: this.formatNS(ns), 'text': this.formatMsg(text), by: by, ts: ts}, function(o,d){
+    BOT.process('title', {channel: this.formatNS(ns), 'text': text, by: by, ts: ts}, function(o,d){
       BOT.log("*** Got title for "+BOT.simpleNS(o.channel)+" ***");
 			var channel = BOT.get_channel(o.channel);
 			if(channel.title != ""){
-				BOT.chat.title(o.channel, o.by, o.text, o.ts);
+				BOT.chat.title(o.channel, o.by, BOT.msgToHtml(o.text), o.ts);
 			}
-      BOT.channel_create(o.channel, {title: o.text});
+      BOT.channel_create(o.channel, {title: BOT.msgToHtml(o.text)});
       d(o);
     });
   };
@@ -357,10 +357,10 @@ module.exports = function(){
 			});
     },
     msg: function(ns,from,content){
-      BOT.process('recv.msg', {channel: BOT.ns_(ns), from: from, text: BOT.formatMsg(content)}, function(o,d){
-        this.logMsg(o.channel, "<"+o.from+"> "+o.text);
-				BOT.chat.msg(o.channel, o.from, o.text);
-        var trig = BOT.config("trigger"), text = o.text;
+      BOT.process('recv.msg', {channel: BOT.ns_(ns), from: from, text: content}, function(o,d){
+        this.logMsg(o.channel, "<"+o.from+"> "+BOT.msgToText(o.text));
+				BOT.chat.msg(o.channel, o.from, BOT.msgToHtml(o.text));
+        var trig = BOT.config("trigger"), text = BOT.msgToText(o.text);
         if(text.indexOf(trig)==0){
           var params = text.slice(trig.length).split(" "),
             cmd = params.shift();
@@ -370,10 +370,10 @@ module.exports = function(){
       });
     },
     action: function(ns, from, content){
-      BOT.process('recv.action', {channel: ns, 'from': from, 'text': BOT.formatMsg(content)},
+      BOT.process('recv.action', {channel: ns, 'from': from, 'text': content},
       function(o,d){
-        BOT.logMsg(o.channel, "* "+o.from+" "+o.text);
-				BOT.chat.action(o.channel, o.from, o.text);
+        BOT.logMsg(o.channel, "* "+o.from+" "+BOT.msgToText(o.text));
+				BOT.chat.action(o.channel, o.from, BOT.msgToHtml(o.text));
       });
     },
     join: function(ns, user, args){
@@ -391,10 +391,10 @@ module.exports = function(){
       });
     },
     kicked: function(ns, user, by, reason){
-      BOT.process('recv.kicked', {channel: ns, 'user': user, 'by': by, 'reason': BOT.formatMsg(reason)},
+      BOT.process('recv.kicked', {channel: ns, 'user': user, 'by': by, 'reason': reason},
       function(o,d){
-        BOT.logMsg(o.channel, "** "+o.user+" was kicked by "+o.by+" * "+o.reason);
-				BOT.chat.kicked(o.channel, o.user, o.by, o.reason);
+        BOT.logMsg(o.channel, "** "+o.user+" was kicked by "+o.by+" * "+BOT.msgToText(o.reason));
+				BOT.chat.kicked(o.channel, o.user, o.by, BOT.msgToHtml(o.reason));
 			});
     },
     privchg: function(ns, user, args){

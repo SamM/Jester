@@ -11,7 +11,8 @@ module.exports = function(){
         if(o.params[0][0]=="#"){
           channel = BOT.formatNS(o.params.shift());
         }
-    		BOT.send.msg(channel, o.params.join(" "));
+        var msg = o.params.join(" ");
+    		BOT.send.msg(channel, msg);
     	}
     }
     this.command.before('say', cmd);
@@ -117,17 +118,31 @@ module.exports = function(){
 
   });
 
-  // Quit / Disconnect
+  // Quit
   BOT.plugin("quit", {enabled: true}, function(plugin){
 
-    function cmd(o){
+    function quit(o){
+      if(!plugin.enabled) return;
+      if(BOT.checkAuth(o.from, 5)){
+    		BOT.send.disconnect();
+        BOT.web.server.destroy();
+    	}
+    }
+
+    this.command.before('quit', quit);
+
+  });
+
+  // Disconnect
+  BOT.plugin("disconnect", {enabled: true}, function(plugin){
+
+    function disconnect(o){
       if(!plugin.enabled) return;
       if(BOT.checkAuth(o.from, 5)){
     		BOT.send.disconnect();
     	}
     }
-    this.command.before('quit', cmd);
-    this.command.before('disconnect', cmd);
+    this.command.before('disconnect', disconnect);
 
   });
 
