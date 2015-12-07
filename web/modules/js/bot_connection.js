@@ -27,12 +27,14 @@ window.BOT = new (function(){
     }else{
       var params = text.split(" "),
           cmd = params.shift().slice(1);
-      BOT.command(ns, cmd, params.join(" "));
+      BOT.command(ns, cmd, params);
     }
   };
 
-  BOT.command = function(ns, cmd, text){
-    var params = text.split(" ");
+  BOT.command = function(ns, cmd, params){
+    BOT.emit("command", cmd, ns, "*WEB*", params);
+    return;
+
     switch(cmd){
       case "say":
       BOT.send.msg(ns, params.join(" "));

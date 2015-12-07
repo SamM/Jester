@@ -32,6 +32,9 @@ window.ControlPanel = window.CP = new (function(){
   //
   this.log_messages = [];
   this.log = function(message){
+    if(message.text){
+      message.text = CP.formatMsg(message.text);
+    }
     CP.log_messages.push(message);
     CP.ticker.queue(message);
     CP.render("log");
@@ -54,6 +57,9 @@ window.ControlPanel = window.CP = new (function(){
     CP.ticker.timeout = null;
 
     if(CP.ticker.events.length > 1){
+      if(CP.ticker.events.length > 10){
+        CP.ticker.events = CP.ticker.events.slice(5);
+      }
       CP.ticker.events.shift();
       CP.ticker.timeout = setTimeout(CP.ticker.tick, 500 / CP.ticker.events.length);
       CP.render();
@@ -73,11 +79,13 @@ window.ControlPanel = window.CP = new (function(){
   };
   this.dAmn.join = function(o){
     var ns = o.channel.toLowerCase();
+    CP.data.current_channel = ns;
     if(CP.channels[ns]){
       CP.channels[ns].joined = true;
-      CP.data.current_channel = ns;
-      CP.render("chat");
+    }else{
+      CP.dAmn.channel_create({ns: o.channel, data: {joined: true}});
     }
+    CP.render("chat");
   }
   this.dAmn.part = function(o){
     var ns = o.channel.toLowerCase();
@@ -166,6 +174,13 @@ window.ControlPanel = window.CP = new (function(){
       CP.channels[ns].messages.push(msg);
     }
     CP.render("chat");
+  }
+  this.formatMsg = function(text){
+    // Remove Emoticon img tag
+    text = text.replace(/<img src="([^"]+)" alt="([^"]+)" title="([^"]+)" width="([^"]+)" height="([^"]+)" \/>/g, "$2");
+    // Remove Thumbnail
+    text = text.replace(/<a([^>]+)><img title="([^"]+)" width="([^"]+)" height="([^"]+)" alt="([^"]+)" src="([^"]+)"\/><\/a>/g, "$5");
+    return text;
   }
 
   //
@@ -507,7 +522,7 @@ var ChatTabs = React.createClass({
     for(var ns in channels){
       var current = ns.toLowerCase() == current_channel.toLowerCase();
       if(channels[ns].joined){
-        tabs.push(<ChatTab ns={ns} key={ns} current={current} />);
+        tabs.push(<ChatTab ns={channels[ns].ns} key={ns} current={current} />);
       }
     }
     return (
@@ -529,16 +544,18 @@ var ChatTab = React.createClass({
     function switchChannel(){
       CP.switchChannel(ns);
     }
-    if(this.props.current){
-      inner = <span>{name}</span>;
-    }else{
-      inner = <a onClick={switchChannel}>{name}</a>;
+    function partChannel(){
+      BOT.send.part(ns);
     }
-    return (
-      <div className="ChatTab">
-        {inner}
-      </div>
-    );
+    if(this.props.current){
+      return <div className="ChatTab">
+        <div className="active"><span className="label">{name}</span><button className="PartButton" onClick={partChannel}>&#x2715;</button></div>
+      </div>;
+    }else{
+      return <div className="ChatTab">
+        <a onClick={switchChannel}>{name}</a>
+      </div>;
+    }
   }
 });
 
@@ -554,9 +571,13 @@ var Chatroom = React.createClass({
   },
   componentDidMount: function() {
     this.updateTitleHeight();
+    window.addEventListener('resize', this.updateTitleHeight);
   },
   componentDidUpdate: function() {
     this.updateTitleHeight();
+  },
+  componentWillUnmount: function() {
+    window.removeEventListener('resize', this.updateTitleHeight);
   },
   render: function(){
     var channel = this.props.channel;
@@ -713,7 +734,7 @@ var ChatInput = React.createClass({
     return (
       <div className="ChatInput">
         <form className="SendForm" onSubmit={this.sendMessage}>
-          <input type="text" className="TextInput" value={value} onChange={this.handleChange} />
+          <input type="text" className="TextInput" value={value} onChange={this.handleChange} tabIndex="1" />
         </form>
       </div>
     )
@@ -736,7 +757,8 @@ var ChatMembers = React.createClass({
         var member = members[name];
         if(member.pc == privclass){
           var instances = member.instances>1?"["+member.instances+"]":"";
-          member_els.push(<li key={name} className="ChatMember">{member.username}{instances}</li>);
+          var url = "http://"+member.username+".deviantart.com/";
+          member_els.push(<li key={name} className="ChatMember"><a href={url} target="_blank">{member.username}{instances}</a></li>);
         }
       }
       if(member_els.length>0){

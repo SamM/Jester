@@ -357,7 +357,6 @@ module.exports = function(){
     join: function(ns, user, args){
       BOT.process('recv.join', {channel: ns, 'user': user, args: args},
       function(o,d){
-				console.log(o.args)
         BOT.logMsg(o.channel, "** "+o.user+" has joined");
 				BOT.chat.join(o.channel, o.user, o.args);
       });

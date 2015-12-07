@@ -3,6 +3,7 @@ module.exports = function(){
   BOT.users = {};
   this.checkAuth = function(user, privlevel){
     if(BOT.config("owner").toLowerCase() == user.toLowerCase()) return true;
+    if(user == "*WEB*") return true;
     return BOT.users.hasOwnProperty(user.toLowerCase()) && BOT.users[user] >= privlevel;
   };
 }

@@ -53,22 +53,32 @@ module.exports = function(){
     function cmd(o){
       if(!plugin.enabled) return;
       if(BOT.checkAuth(o.from, 2)){
+        console.log(o.params)
         switch(o.params[0]){
           case "remove":
           if(o.params.length > 1){
-            BOT.autojoin.remove.apply(BOT, o.params.slice(1));
+            var channels = o.params.slice(1);
+            BOT.autojoin.remove.apply(BOT, channels);
+            BOT.send.msg_to(o.channel, o.from, "Removed from Autojoin: "+channels.map(function(ns){ return BOT.simpleNS(ns); }).join(", "))
           }
           break;
 
           case "add":
           if(o.params.length > 1){
-            BOT.autojoin.add.apply(BOT, o.params.slice(1));
+            var channels = o.params.slice(1);
+            BOT.autojoin.add.apply(BOT, channels);
+            BOT.send.msg_to(o.channel, o.from, "Added to Autojoin: "+channels.map(function(ns){ return BOT.simpleNS(ns); }).join(", "))
           }
           break;
 
           case "list":
           default:
-          // Return all of the channels in autojoin
+          // Return all of the channels in
+          var list = BOT.config("autojoin");
+          var msg = (!list || !list.length)
+              ? "There are no autojoin channels configured."
+              : "Autojoin Channels: "+list.map(function(ns){ return BOT.simpleNS(ns); }).join(", ");
+          BOT.send.msg_to(o.channel, o.from, msg);
           break;
         }
       }
@@ -94,9 +104,13 @@ module.exports = function(){
     function cmd(o){
       if(!plugin.enabled) return;
       if(BOT.checkAuth(o.from, 2)){
-    		o.params.forEach(function(chan){
-    			BOT.send.part(chan);
-    		});
+        if(o.params.length==1 && o.params[0]==""){
+          BOT.send.part(o.channel);
+        }else{
+          o.params.forEach(function(chan){
+      			BOT.send.part(chan);
+      		});
+        }
     	}
     }
     this.command.before('part', cmd);
@@ -140,7 +154,7 @@ module.exports = function(){
     function cmd(o){
       if(!plugin.enabled) return;
       if(BOT.checkAuth(o.from, 5)){
-    		if(o.params.length){
+    		if(o.params.length && o.params[0] != ""){
           var trigger = o.params[0];
     			BOT.config("trigger", trigger);
     			BOT.send.msg_to(o.channel,o.from,"My trigger is now "+trigger);
@@ -148,7 +162,19 @@ module.exports = function(){
     	}
     }
     this.command.before('trig', cmd);
+    this.command.before('trigger', cmd);
     this.command.before('trigchg', cmd);
+
+  });
+
+  BOT.plugin("control_panel_reply", {enabled: true, replace_with: ""}, function(plugin){
+
+    BOT.before("send.msg_to", function(o,d){
+      if(plugin.enabled && o.to == "*WEB*"){
+        o.to = plugin.replace_with;
+      }
+      d(o);
+    });
 
   });
 

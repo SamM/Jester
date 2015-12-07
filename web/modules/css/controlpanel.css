@@ -17,7 +17,7 @@ body, html{
   line-height: 1.5rem;
   font-style: italic;
   font-size: 1.75em;
-  color: #F7590A;
+  color: #00cccc;
 }
 .NavButtonsList{
   float: left;
@@ -40,8 +40,8 @@ body, html{
   font-weight: bold;
 }
 .NavButton span{
-  background-color: #F7590A;
-  border-color: #F7590A;
+  background-color: #00cccc;
+  border-color: #00cccc;
   color: rgba(0,0,0,0.66);
 }
 .NavButton a{
@@ -153,7 +153,7 @@ body, html{
   float: left;
   margin-right: 4px;
 }
-.ChatTab span,
+.ChatTab .active,
 .ChatTab a{
   display: block;
   text-decoration: none;
@@ -164,8 +164,22 @@ body, html{
   border-top-right-radius: 6px;
 }
 
-.ChatTab span{
+.ChatTab .active{
   font-weight: bold;
+}
+.ChatTab .PartButton{
+  border: 1px solid #cc0000;
+  background-color: #e06666;
+  color: white;
+  font-weight: bold;
+  border-radius: 6px;
+  padding: 1px 3px 1px 4px;
+  margin-left: 5px;
+  font-size: 8px;
+}
+.ChatTab .PartButton:hover{
+  background-color: #cc0000;
+  cursor: pointer;
 }
 .ChatTab a{
   padding-bottom: 4px;
@@ -217,7 +231,7 @@ body, html{
   text-indent: 3px;
 }
 .ChatTopic, .ChatTitleInner{
-  padding: 3px;
+  padding: 5px 3px;
 }
 .ChatTopic {
   background-color: #bbc6b9;
@@ -251,9 +265,10 @@ body, html{
 }
 .ChatMembers{
   left: auto;
-  width: 150px;
+  width: 130px;
   overflow: auto;
   font-size: 0.85em;
+  padding: 10px 10px 0 10px;
 }
 .ChatMembers h2{
   font-size: 1em;
@@ -264,10 +279,17 @@ body, html{
 .ChatMembers ul{
   list-style: none;
   margin: 0;
-  padding: 10px 5px 5px 10px;
+  padding: 10px 0 5px 0;
 }
 .ChatMember{
-  padding-bottom: 5px;
+  padding: 0 5px 5px 10px;
+}
+.ChatMember a{
+  text-decoration: none;
+  display: block;
+}
+.ChatMember a:hover{
+  text-decoration: underline;
 }
 .ChatMessage{
   padding: 2px;
