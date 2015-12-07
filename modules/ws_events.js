@@ -31,7 +31,8 @@ module.exports = function(){
     "refresh_token",
     "autojoin",
     "user_icon",
-    "owner"
+    "owner",
+    "auto_connect"
   ];
 
   BOT.logout = function(){
@@ -74,6 +75,7 @@ module.exports = function(){
     });
     data.auth_url = auth_url;
 
+    socket.emit('CP', "reset");
     socket.emit('CP', "connected", data);
 
     if(event_history.length){

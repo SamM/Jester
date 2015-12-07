@@ -90,6 +90,9 @@ function Jester(){
 		BOT.process('run', {start_time: new Date()},function(o,d){
       console.log();
       BOT.log('Running Jester @ '+o.start_time);
+      if(BOT.config("auto_connect") == true){
+        BOT.connect();
+      }
 			d(o);
 		});
 	};

@@ -33,12 +33,23 @@ window.ControlPanel = window.CP = new (function(){
   this.log_messages = [];
   this.log = function(message){
     if(message.text){
-      message.text = CP.formatMsg(message.text);
+      message.text = CP.removeTags(message.text);
     }
     CP.log_messages.push(message);
     CP.ticker.queue(message);
     CP.render("log");
   };
+
+  //
+  // Message Formatting
+  //
+  this.removeTags = function(text){
+    // Remove Emoticon img tag
+    text = text.replace(/<img src="([^"]+)" alt="([^"]+)" title="([^"]+)" width="([^"]+)" height="([^"]+)" \/>/g, "$2");
+    // Remove Thumbnail
+    text = text.replace(/<a([^>]+)><img title="([^"]+)" width="([^"]+)" height="([^"]+)" alt="([^"]+)" src="([^"]+)"\/><\/a>/g, "$5");
+    return text;
+  }
 
   //
   // Event Ticker
@@ -52,9 +63,12 @@ window.ControlPanel = window.CP = new (function(){
       CP.ticker.tick();
     }
   };
-  this.ticker.tick = function(){
+  this.ticker.clear = function(){
     clearTimeout(CP.ticker.timeout);
     CP.ticker.timeout = null;
+  };
+  this.ticker.tick = function(){
+    CP.ticker.clear();
 
     if(CP.ticker.events.length > 1){
       if(CP.ticker.events.length > 10){
@@ -62,6 +76,8 @@ window.ControlPanel = window.CP = new (function(){
       }
       CP.ticker.events.shift();
       CP.ticker.timeout = setTimeout(CP.ticker.tick, 500 / CP.ticker.events.length);
+      CP.render();
+    }else{
       CP.render();
     }
   }
@@ -164,7 +180,7 @@ window.ControlPanel = window.CP = new (function(){
   //
   this.chat.log = function(obj){
     var ns = obj.ns,
-        msg = obj.msg;
+        msg = CP.chat.hilighter(obj.msg);
     if(!CP.channels.hasOwnProperty(ns)){
       CP.dAmn.channel_create({
         ns: ns,
@@ -175,12 +191,22 @@ window.ControlPanel = window.CP = new (function(){
     }
     CP.render("chat");
   }
-  this.formatMsg = function(text){
-    // Remove Emoticon img tag
-    text = text.replace(/<img src="([^"]+)" alt="([^"]+)" title="([^"]+)" width="([^"]+)" height="([^"]+)" \/>/g, "$2");
-    // Remove Thumbnail
-    text = text.replace(/<a([^>]+)><img title="([^"]+)" width="([^"]+)" height="([^"]+)" alt="([^"]+)" src="([^"]+)"\/><\/a>/g, "$5");
-    return text;
+  this.chat.hilighter = function(msg){
+    if(msg.text && ["title", "topic"].indexOf(msg.type) == -1){
+      msg.hilite = false;
+      var trig = CP.data.config.trigger;
+      if(trig && trig != "" && msg.text.indexOf(trig) == 0 ){
+        if(/[a-zA-Z0-9]/.exec(msg.text.slice(trig.length)[0]) != null){
+          // Bot Command
+          msg.hilite = "cmd-hl";
+        }
+      }
+      if( -1 != msg.user.search( RegExp("([^A-Za-z]+|^)"+CP.data.config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","i") ) )
+            msg.hilite = "self-hl";
+      else if( -1 != msg.text.search( RegExp("([^A-Za-z]+|^)"+CP.data.config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","im") ) )
+            msg.hilite = "other-hl";
+    }
+    return msg;
   }
 
   //
@@ -309,6 +335,22 @@ window.ControlPanel = window.CP = new (function(){
     }
     CP.route();
   };
+
+  // Reset data
+  this.reset = function(){
+    var data = {
+      current_page: CP.data.current_page,
+      current_channel: null,
+      config: {}
+    };
+    CP.data = data;
+    CP.channels = {};
+    CP.log_messages = [];
+    CP.ticker.events = [];
+    CP.ticker.clear();
+    CP.render();
+  };
+
   // Connected event
   this.connected = function(data){
     console.log("Connected To Bot");
@@ -658,48 +700,50 @@ var ChatMessage = React.createClass({
     var inner = null;
     switch(msg.type){
       case "msg":
-      inner = <div className="msg"><span className="user">{msg.user}</span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
+      var classes = msg.hilite?"msg "+msg.hilite:"msg";
+      inner = <div className={classes}><span className="user"><span className="username">{msg.user}</span></span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
       break;
 
       case "action":
-      inner = <div className="action"><span className="user">{msg.user}</span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
+      var classes = msg.hilite?"action "+msg.hilite:"action";
+      inner = <div className={classes}><span className="user"><span className="username">{msg.user}</span></span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
       break;
 
       case "join":
-      inner = <div className="join"><span className="user">{msg.user}</span> <span className="text">has joined</span></div>;
+      inner = <div className="join"><span className="user"><span className="username">{msg.user}</span></span> <span className="text">has joined</span></div>;
       break;
 
       case "part":
       var reason = msg.reason?<span className="reason">{msg.reason}</span>:"";
-      inner = <div className="part"><span className="user">{msg.user}</span> <span className="text">has left</span> {reason}</div>;
+      inner = <div className="part"><span className="user"><span className="username">{msg.user}</span></span><span className="text">has left</span> {reason}</div>;
       break;
 
       case "title":
-      inner = <div className="title"><span className="text">title changed by</span> <span className="user">{msg.user}</span></div>;
+      inner = <div className="title"><span className="text">title changed by</span> <span className="by">{msg.user}</span></div>;
       break;
 
       case "topic":
-      inner = <div className="topic"><span className="text">topic changed by</span> <span className="user">{msg.user}</span></div>;
+      inner = <div className="topic"><span className="text">topic changed by</span> <span className="by">{msg.user}</span></div>;
       break;
 
       case "kicked":
-      inner = <div className="kicked"><span className="user">{msg.user}</span> <span className="text">was kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
+      inner = <div className="kicked"><span className="user"><span className="username">{msg.user}</span></span><span className="text">was kicked by </span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
       break;
 
       case "privchange":
-      inner = <div className="privchange"><span className="user">{msg.user}</span> <span className="text">has been made a member of <span className="pc">{msg.pc}</span> by</span> <span className="by">{msg.by}</span></div>;
+      inner = <div className="privchange"><span className="user"><span className="username">{msg.user}</span></span><span className="text">has been made a member of <span className="pc">{msg.pc}</span> by</span> <span className="by">{msg.by}</span></div>;
       break;
 
       case "self_join":
-      inner = <div className="join self"><span className="user">You</span> <span className="text">have joined {channel_name}</span></div>;
+      inner = <div className="join self"><span className="user"><span className="username">You</span></span><span className="text">have joined {channel_name}</span></div>;
       break;
 
       case "self_part":
-      inner = <div className="part self"><span className="user">You</span> <span className="text">have left {channel_name}</span></div>;
+      inner = <div className="part self"><span className="user"><span className="username">You</span></span><span className="text">have left {channel_name}</span></div>;
       break;
 
       case "self_kicked":
-      inner = <div className="kicked self"><span className="user">You</span> <span className="text">have been kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
+      inner = <div className="kicked self"><span className="user"><span className="username">You</span></span><span className="text">have been kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
       break;
 
       default:
@@ -788,10 +832,10 @@ var ConfigPage = React.createClass({
       <div className="ConfigModule">
         <button className="LogoutButton" onClick={doLogout}>Logout</button>
         <h2>Login Details</h2>
-        <ConfigRow config={config} option="username" title="Bot Username" editable={false} />
-        <ConfigRow config={config} option="damn_token" title="dAmn Token" editable={false} />
-        <ConfigRow config={config} option="access_token" title="Access Token" editable={false} />
-        <ConfigRow config={config} option="refresh_token" title="Refresh Token" editable={false} />
+        <ConfigInput config={config} option="username" title="Bot Username" editable={false} />
+        <ConfigInput config={config} option="damn_token" title="dAmn Token" editable={false} />
+        <ConfigInput config={config} option="access_token" title="Access Token" editable={false} />
+        <ConfigInput config={config} option="refresh_token" title="Refresh Token" editable={false} />
       </div>
       :"";
     function formatAJOutput(v){
@@ -808,16 +852,20 @@ var ConfigPage = React.createClass({
         {loginDetails}
         <div className="ConfigModule">
           <h2>Bot Configuration</h2>
-          <ConfigRow config={config} option="trigger" title="Bot Trigger" editable={true} />
-          <ConfigRow config={config} option="owner" title="Bot Owner" editable={true} />
-          <ConfigRow config={config} option="autojoin" title="Auto-Join Channels" subtitle="(space seperated)" editable={true} formatOutput={formatAJOutput} formatInput={formatAJInput} />
+          <ConfigInput config={config} option="trigger" title="Bot Trigger" editable={true} />
+          <ConfigInput config={config} option="owner" title="Bot Owner" editable={true} />
+          <ConfigInput config={config} option="autojoin" title="Auto-Join Channels" subtitle="(space seperated)" editable={true} formatOutput={formatAJOutput} formatInput={formatAJInput} />
+          <ConfigInput config={config} option="auto_connect" title="Auto-Connect to dAmn" subtitle="when running bot" editable={true} checkbox={true} />
         </div>
       </div>
     )
   }
 });
 
-var ConfigRow = React.createClass({
+var ConfigInput = React.createClass({
+  handleCheckbox: function(event){
+    BOT.config(this.props.option, event.target.checked);
+  },
   render: function(){
     var title = this.props.title;
     var config = this.props.config;
@@ -826,12 +874,21 @@ var ConfigRow = React.createClass({
     var formatOutput = this.props.formatOutput || function(v){return v};
     var formatInput = this.props.formatInput || function(v){return v};
     var value = formatOutput(config[option]);
+    var check = this.props.checkbox;
     var subtitle = this.props.subtitle?<span className="subtitle">{this.props.subtitle}</span>:"";
     function editConfig(){
       var new_value = prompt("Enter a new value: ", value);
       if(new_value !== null){
         BOT.config(option, formatInput(new_value));
       }
+    }
+    if(check){
+      var text = value?"(Enabled)":"(Disabled)";
+      return (
+        <div className="ConfigRow">
+          <label>{title}{subtitle}</label><span className="value"><input type="checkbox" checked={value} onChange={this.handleCheckbox} /> {text}</span>
+        </div>
+      )
     }
     var edit_button = editable?<button className="EditButton" onClick={editConfig}>Edit</button>:"";
     return (

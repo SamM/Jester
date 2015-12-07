@@ -68,9 +68,13 @@ module.exports = function(){
     // deviant
       msg = msg.replace(/&dev\t([^\t])\t([^\t]+)\t/g,':dev$2:');
         // link no description
-      msg = msg.replace(/&link\t([^\t]+)\t&/g,'$1');
+      function linkReplace(match, p1){
+        var url = p1.replace(/http(s)?:\/\/(.+)/g, "$2");
+        return '<a href="'+p1+'" target="_blank">'+url+'</a>';
+      }
+      msg = msg.replace(/&link\t([^\t]+)\t&/g,linkReplace);
         // link with description
-      msg = msg.replace(/&link\t([^\t]+)\t([^\t]+)\t&\t/g,'<a href="$1" title="$2">$2</a>');
+      msg = msg.replace(/&link\t([^\t]+)\t([^\t]+)\t&\t/g,'<a href="$1" title="$2" target="_blank">$2</a>');
         // abbr
       msg = msg.replace(/&abbr\t([^\t]+)\t/g,'<abbr title="$1">');
       msg = msg.replace(/&\/abbr\t/g,"</abbr>");

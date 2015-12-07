@@ -294,18 +294,41 @@ body, html{
 .ChatMessage{
   padding: 2px;
 }
+.ChatMessage a{
+  font-weight: bold;
+  text-decoration: none;
+}
 .ChatMessageList .Messages{
 
 }
-.ChatMessage .join .user,
+.ChatMessage div{
+  display: table;
+  box-sizing: border-box;
+  zoom: 1;
+}
+.ChatMessage div .user{
+  display: table-cell;
+  white-space: nowrap;
+  vertical-align: middle;
+  padding-right: 1ex;
+}
+.ChatMessage div .text{
+  display: table-cell;
+}
+
+.ChatMessage .join .username,
 .ChatMessage .join.self .text,
-.ChatMessage .part .user,
+.ChatMessage .part .username,
 .ChatMessage .part.self .text,
-.ChatMessage .msg .user,
-.ChatMessage .action .user,
-.ChatMessage .kicked .user,
+.ChatMessage .msg .username,
+.ChatMessage .action .username,
+.ChatMessage .kicked .username,
 .ChatMessage .kicked .text,
 .ChatMessage .kicked .by,
+.ChatMessage .title .text,
+.ChatMessage .title .by,
+.ChatMessage .topic .text,
+.ChatMessage .topic .by,
 .ChatMessage .privchange{
   font-weight: bold;
 }
@@ -317,10 +340,10 @@ body, html{
 .ChatMessage .privchange .pc{
   font-style: italic;
 }
-.ChatMessage .msg .user:before{
+.ChatMessage .msg .username:before{
   content: "<";
 }
-.ChatMessage .msg .user:after{
+.ChatMessage .msg .username:after{
   content: ">";
 }
 .ChatMessage .part .reason:before{
@@ -329,23 +352,39 @@ body, html{
 .ChatMessage .part .reason:after{
   content: "]";
 }
-.ChatMessage .action .user:before{
+.ChatMessage .action .username:before{
   content: "* ";
 }
-.ChatMessage .join .user:before,
-.ChatMessage .part .user:before,
-.ChatMessage .kicked .user:before,
-.ChatMessage .privchange .user:before{
+.ChatMessage .join .username:before,
+.ChatMessage .part .username:before,
+.ChatMessage .kicked .username:before,
+.ChatMessage .title .text:before,
+.ChatMessage .topic .text:before,
+.ChatMessage .privchange .username:before{
   content: "** ";
 }
-.ChatMessage .join.self .user:before,
-.ChatMessage .part.self .user:before{
+.ChatMessage .join.self .username:before,
+.ChatMessage .part.self .username:before{
   content: "*** ";
 }
 .ChatMessage .join.self .text:after,
 .ChatMessage .kicked .by:after,
-.ChatMessage .privchange .by:after{
+.ChatMessage .privchange .by:after,
+.ChatMessage .title .by:after,
+.ChatMessage .topic .by:after{
   content: " *";
+}
+.ChatMessage .other-hl .username,
+.ChatMessage .other-hl .text,
+.ChatMessage .cmd-hl .username,
+.ChatMessage .cmd-hl .text{
+  background-color: #fafffa;
+}
+.ChatMessage .by{
+  padding-left: 1ex;
+}
+.ChatMessage .self-hl .username{
+    background-color: #eaefea;
 }
 .ConfigModule {
   margin: 20px;

@@ -33,20 +33,22 @@ module.exports = function(){
     BOT.chat.log(channel, msg);
   };
 
-  BOT.chat.title = function(channel, user, text){
+  BOT.chat.title = function(channel, user, text, timestamp){
     var msg = {
       type: "title",
       user: user,
-      text: text
+      text: text,
+      timestamp: timestamp
     };
     BOT.chat.log(channel, msg);
   };
 
-  BOT.chat.topic = function(channel, user, text){
+  BOT.chat.topic = function(channel, user, text, timestamp){
     var msg = {
-      type: "msg",
+      type: "topic",
       user: user,
-      text: text
+      text: text,
+      timestamp: timestamp
     };
     BOT.chat.log(channel, msg);
   };

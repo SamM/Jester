@@ -9,6 +9,11 @@ module.exports = function(){
   this.channels = {};
   this.connect = function(){
     BOT.process('connect', function(o,d){
+			if(!BOT.config("damn_token") || !BOT.config("username")){
+				BOT.log('*** Could not connect to dAmn *** (insufficient bot config)');
+				d(o);
+				return;
+			}
       BOT.log('*** Connecting to dAmn ***');
       var con = BOT.connection = net.createConnection(3900, 'chat.deviantart.com');
 			BOT.connected = true;
@@ -172,6 +177,10 @@ module.exports = function(){
 			d(o);
 		});
 	};
+	this.get_channel = function(ns){
+		var ns = BOT.formatNS(ns).toLowerCase();
+		return BOT.channels[ns];
+	};
   this.channel_create = function(ns, data, safe){
     BOT.process('channel_create', {ns: BOT.formatNS(ns), data: data?data:{}, safe: safe}, function(o,d){
 			var data = o.data;
@@ -211,15 +220,23 @@ module.exports = function(){
     });
   };
   this.channel_topic = function(ns, text, by, ts){
-    BOT.process('topic', {channel: BOT.formatNS(ns), 'text': this.formatMsg(text)}, function(o,d){
+    BOT.process('topic', {channel: BOT.formatNS(ns), 'text': this.formatMsg(text), by: by, ts: ts}, function(o,d){
       BOT.log("*** Got topic for "+BOT.simpleNS(o.channel)+" ***");
+			var channel = BOT.get_channel(o.channel);
+			if(channel.topic != ""){
+				BOT.chat.topic(o.channel, o.by, o.text, o.ts);
+			}
       BOT.channel_create(o.channel, {topic: o.text});
       d(o);
     });
   };
   this.channel_title = function(ns, text, by, ts){
-    BOT.process('title', {channel: this.formatNS(ns), 'text': this.formatMsg(text)}, function(o,d){
+    BOT.process('title', {channel: this.formatNS(ns), 'text': this.formatMsg(text), by: by, ts: ts}, function(o,d){
       BOT.log("*** Got title for "+BOT.simpleNS(o.channel)+" ***");
+			var channel = BOT.get_channel(o.channel);
+			if(channel.title != ""){
+				BOT.chat.title(o.channel, o.by, o.text, o.ts);
+			}
       BOT.channel_create(o.channel, {title: o.text});
       d(o);
     });
