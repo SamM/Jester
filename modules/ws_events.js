@@ -32,7 +32,10 @@ module.exports = function(){
     "autojoin",
     "user_icon",
     "owner",
-    "auto_connect"
+    "auto_connect",
+    "hilite_bot",
+    "hilite_owner",
+    "hilite_command"
   ];
 
   BOT.logout = function(){

@@ -180,7 +180,7 @@ window.ControlPanel = window.CP = new (function(){
   //
   this.chat.log = function(obj){
     var ns = obj.ns,
-        msg = CP.chat.hilighter(obj.msg);
+        msg = obj.msg;
     if(!CP.channels.hasOwnProperty(ns)){
       CP.dAmn.channel_create({
         ns: ns,
@@ -190,23 +190,6 @@ window.ControlPanel = window.CP = new (function(){
       CP.channels[ns].messages.push(msg);
     }
     CP.render("chat");
-  }
-  this.chat.hilighter = function(msg){
-    if(msg.text && ["title", "topic"].indexOf(msg.type) == -1){
-      msg.hilite = false;
-      var trig = CP.data.config.trigger;
-      if(trig && trig != "" && msg.text.indexOf(trig) == 0 ){
-        if(/[a-zA-Z0-9]/.exec(msg.text.slice(trig.length)[0]) != null){
-          // Bot Command
-          msg.hilite = "cmd-hl";
-        }
-      }
-      if( -1 != msg.user.search( RegExp("([^A-Za-z]+|^)"+CP.data.config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","i") ) )
-            msg.hilite = "self-hl";
-      else if( -1 != msg.text.search( RegExp("([^A-Za-z]+|^)"+CP.data.config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","im") ) )
-            msg.hilite = "other-hl";
-    }
-    return msg;
   }
 
   //
@@ -547,7 +530,7 @@ var ChatroomPage = React.createClass({
     return (
       <div className="ChatroomPage">
         <ChatTabs channels={channels} current_channel={current_channel} />
-        <Chatroom channel={channels[current_channel]} />
+        <Chatroom channel={channels[current_channel]} data={this.props.data} />
       </div>
     )
   }
@@ -664,7 +647,7 @@ var Chatroom = React.createClass({
         <div className="ChatBody" ref="body">
           <div className="ChatIO">
             <div className="ChatTopic" dangerouslySetInnerHTML={{__html: channel.topic}}></div>
-            <ChatMessageList ns={channel.ns} messages={channel.messages} />
+            <ChatMessageList ns={channel.ns} messages={channel.messages} data={this.props.data} />
             <ChatInput ns={channel.ns} draft={channel.draft} />
           </div>
           <ChatMembers ns={channel.ns} members={channel.members} privclasses={channel.privclasses} />
@@ -701,13 +684,14 @@ var ChatMessageList = React.createClass({
   render: function(){
     var messages = this.props.messages;
     var ns = this.props.ns;
+    var data = this.props.data;
     return (
       <div className="ChatMessageList">
         <div className="ChatMessageListOuter">
           <div className="ChatMessageListInner">
             <div className="Messages">
             {messages.map(function(msg, i){
-              return <ChatMessage key={i} message={msg} ns={ns} />;
+              return <ChatMessage key={i} message={msg} data={data} ns={ns} />;
             })}
             </div>
           </div>
@@ -721,61 +705,110 @@ var ChatMessageList = React.createClass({
 // ChatMessage Component
 //
 var ChatMessage = React.createClass({
+  parseHilite: function(msg){
+    if(!msg.text || ["msg", "action"].indexOf(msg.type) == -1)
+      return "";
+    var config = this.props.data.config;
+    var trig = config.trigger;
+    if(config.hilite_command && trig && trig != "" && msg.text.indexOf(trig) == 0 ){
+      if(/[a-zA-Z0-9]/.exec(msg.text.slice(trig.length)[0]) != null){
+        // Bot Command
+        return "cmd-hl";
+      }
+    }
+    if(config.hilite_bot && -1 != msg.user.search( RegExp("([^A-Za-z]+|^)"+config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","i") ) )
+      return "self-hl";
+    else if(config.hilite_bot && -1 != msg.text.search( RegExp("([^A-Za-z]+|^)"+config.username+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","im") ) )
+      return "other-hl";
+    else if(config.hilite_owner && -1 != msg.user.search( RegExp("([^A-Za-z]+|^)"+config.owner+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","i") ) )
+      return "self-hl";
+    else if(config.hilite_owner && -1 != msg.text.search( RegExp("([^A-Za-z]+|^)"+config.owner+"([^A-Za-z]+|$|s$|s[^A-Za-z]+)","im") ) )
+      return "other-hl";
+
+    return "";
+  },
+  makeTimestamp: function(ts){
+    var date = new Date(ts);
+    var hours = date.getHours();
+    var ampm = "AM";
+    if(hours == 0){
+      hours = 12;
+    }else if(hours>12){
+      hours -= 12;
+      ampm = "PM";
+    }
+    var mins = date.getMinutes();
+    var secs = date.getSeconds();
+    if(hours<10){
+      hours = "0"+hours;
+    }
+    if(mins<10){
+      mins = "0"+mins;
+    }
+    if(secs<10){
+      secs = "0"+secs;
+    }
+    return [hours, mins, secs].join(":")+" "+ampm;
+  },
   render: function(){
     var ns = this.props.ns;
     var channel_name = "#"+ns.split(":")[1];
     var msg = this.props.message;
     var inner = null;
+    var ts = this.makeTimestamp(msg.timestamp);
+    var timestamp = <span className="timestamp">{ts}</span>;
+    var hilite = this.parseHilite(msg);
+
     switch(msg.type){
       case "msg":
-      var classes = msg.hilite?"msg "+msg.hilite:"msg";
-      inner = <div className={classes}><span className="user"><span className="username">{msg.user}</span></span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
+      var classes = hilite?"msg "+hilite:"msg";
+      inner = <div className={classes}>{timestamp}<span className="user"><span className="username">{msg.user}</span></span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
       break;
 
       case "action":
-      var classes = msg.hilite?"action "+msg.hilite:"action";
-      inner = <div className={classes}><span className="user"><span className="username">{msg.user}</span></span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
+      var classes = hilite?"action "+hilite:"action";
+      inner = <div className={classes}>{timestamp}<span className="user"><span className="username">{msg.user}</span></span> <span className="text" dangerouslySetInnerHTML={{__html: msg.text}}></span></div>;
       break;
 
       case "join":
-      inner = <div className="join"><span className="user"><span className="username">{msg.user}</span></span> <span className="text">has joined</span></div>;
+      inner = <div className="join">{timestamp}<span className="user"><span className="username">{msg.user}</span></span> <span className="text">has joined</span></div>;
       break;
 
       case "part":
       var reason = msg.reason?<span className="reason">{msg.reason}</span>:"";
-      inner = <div className="part"><span className="user"><span className="username">{msg.user}</span></span><span className="text">has left</span> {reason}</div>;
+      inner = <div className="part">{timestamp}<span className="user"><span className="username">{msg.user}</span></span><span className="text">has left</span> {reason}</div>;
       break;
 
       case "title":
-      inner = <div className="title"><span className="text">title changed by</span> <span className="by">{msg.user}</span></div>;
+      inner = <div className="title">{timestamp}<span className="text">title changed by</span> <span className="by">{msg.user}</span></div>;
       break;
 
       case "topic":
-      inner = <div className="topic"><span className="text">topic changed by</span> <span className="by">{msg.user}</span></div>;
+      inner = <div className="topic">{timestamp}<span className="text">topic changed by</span> <span className="by">{msg.user}</span></div>;
       break;
 
       case "kicked":
-      inner = <div className="kicked"><span className="user"><span className="username">{msg.user}</span></span><span className="text">was kicked by </span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
+      inner = <div className="kicked">{timestamp}<span className="user"><span className="username">{msg.user}</span></span><span className="text">was kicked by </span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
       break;
 
       case "privchange":
-      inner = <div className="privchange"><span className="user"><span className="username">{msg.user}</span></span><span className="text">has been made a member of <span className="pc">{msg.pc}</span> by</span> <span className="by">{msg.by}</span></div>;
+      inner = <div className="privchange">{timestamp}<span className="user"><span className="username">{msg.user}</span></span><span className="text">has been made a member of <span className="pc">{msg.pc}</span> by</span> <span className="by">{msg.by}</span></div>;
       break;
 
       case "self_join":
-      inner = <div className="join self"><span className="user"><span className="username">You</span></span><span className="text">have joined {channel_name}</span></div>;
+      inner = <div className="join self">{timestamp}<span className="user"><span className="username">You</span></span><span className="text">have joined {channel_name}</span></div>;
       break;
 
       case "self_part":
-      inner = <div className="part self"><span className="user"><span className="username">You</span></span><span className="text">have left {channel_name}</span></div>;
+      inner = <div className="part self">{timestamp}<span className="user"><span className="username">You</span></span><span className="text">have left {channel_name}</span></div>;
       break;
 
       case "self_kicked":
-      inner = <div className="kicked self"><span className="user"><span className="username">You</span></span><span className="text">have been kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
+      inner = <div className="kicked self">{timestamp}<span className="user"><span className="username">You</span></span><span className="text">have been kicked by</span> <span className="by">{msg.by}</span> <span className="reason" dangerouslySetInnerHTML={{__html: msg.reason}}></span></div>;
       break;
 
       default:
-      inner = <div className="unknown">{JSON.stringify(msg)}</div>;
+      inner = <div className="unknown">{timestamp}{JSON.stringify(msg)}</div>;
       break;
     }
     return (
@@ -884,6 +917,12 @@ var ConfigPage = React.createClass({
           <ConfigInput config={config} option="owner" title="Bot Owner" editable={true} />
           <ConfigInput config={config} option="autojoin" title="Auto-Join Channels" subtitle="(space seperated)" editable={true} formatOutput={formatAJOutput} formatInput={formatAJInput} />
           <ConfigInput config={config} option="auto_connect" title="Auto-Connect to dAmn" subtitle="when running bot" editable={true} checkbox={true} />
+        </div>
+        <div className="ConfigModule">
+          <h2>Message Hilighting</h2>
+          <ConfigInput config={config} option="hilite_bot" title="Bot Username" editable={true} checkbox={true} />
+          <ConfigInput config={config} option="hilite_owner" title="Owner Username" editable={true} checkbox={true} />
+          <ConfigInput config={config} option="hilite_command" title="Bot Command" editable={true} checkbox={true} />
         </div>
       </div>
     )

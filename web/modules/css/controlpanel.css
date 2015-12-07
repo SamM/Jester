@@ -314,6 +314,9 @@ body, html{
 .ChatMessage{
   padding: 2px;
 }
+.ChatMessage img{
+  vertical-align: middle;
+}
 .ChatMessage a{
   font-weight: bold;
   text-decoration: none;
@@ -332,10 +335,19 @@ body, html{
   vertical-align: middle;
   padding-right: 1ex;
 }
+.ChatMessage .timestamp{
+  font-size: 0.9em;
+}
+.ChatMessage div .user,
+.ChatMessage .timestamp{
+  padding-right: 0.5ex;
+}
+.ChatMessage .timestamp,
 .ChatMessage div .text{
   display: table-cell;
+  vertical-align: middle;
 }
-
+.ChatMessage .timestamp,
 .ChatMessage .join .username,
 .ChatMessage .join.self .text,
 .ChatMessage .part .username,
@@ -353,7 +365,8 @@ body, html{
   font-weight: bold;
 }
 .ChatMessage .join,
-.ChatMessage .part{
+.ChatMessage .part,
+.ChatMessage .timestamp{
   color: #88938d;
 }
 .ChatMessage .action,
