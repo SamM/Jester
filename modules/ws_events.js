@@ -45,9 +45,27 @@ module.exports = function(){
   };
 
   var event_history = [];
+  var max_message_history = 100;
+  var filter_message_types = ["msg", "action"];
 
   function queue_event(event){
     event_history.push(event);
+    if(event_history.length > max_message_history){
+      var e, count = 0, history = [];
+      for(var i=event_history.length-1; i >= 0; i--){
+        e = event_history[i];
+        if(e[0]=="chat.log" && filter_message_types.indexOf(e[1].msg.type) > -1){
+          console.log(e[1]);
+          if(count < max_message_history){
+            count++;
+            history.unshift(e);
+          }
+        }else{
+          history.unshift(e);
+        }
+      }
+      event_history = history;
+    }
   }
 
   dAmn_events.forEach(function(method){

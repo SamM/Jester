@@ -134,7 +134,7 @@ module.exports = function(){
       msg = msg.replace(/&bcode\t/g,	"<bcode>" );
       msg = msg.replace(/&\/bcode\t/g,"</bcode>");
       // deviant
-      msg = msg.replace(/&dev\t([^\t])\t([^\t]+)\t/g,':dev$2:');
+      msg = msg.replace(/&dev\t([^\t])\t([^\t]+)\t/g,'<a href="http://$2.deviantart.com/" target="_blank">$1$2</a>');
       // link no description
       function linkReplace(match, p1){
         var url = p1.replace(/http(s)?:\/\/(.+)/g, "$2");
@@ -152,7 +152,41 @@ module.exports = function(){
       // anchor
       msg = msg.replace(/&a\t([^\t]+)\t([^\t]*)\t/g,'<a href="$1" title="$2">');
       // avatar
-      msg = msg.replace(/&avatar\t([^\t]+)\t([^\t]+)\t/g,':icon$1:');
+      var dAmn_avatar_ext = ['.gif', '.gif', '.jpg', '.png'];
+      function printAvatar( match, username, usericon ){
+          var file, ext, cachebuster;
+          usericon = parseInt(usericon);
+          cachebuster = (usericon >> 2) & 15;
+          usericon = usericon & 3;
+          ext = dAmn_avatar_ext[ usericon ];
+          if( !ext )
+              ext = '.gif';
+
+          if (cachebuster) {
+              cachebuster = '?' + cachebuster;
+          }
+          else {
+              cachebuster = '';
+          }
+
+          if( usericon )
+          {
+              var tmp = username.replace(/[^a-zA-Z0-9_]/g,"_");
+              file =  tmp.charAt(0) + '/' +
+                      tmp.charAt(1) + '/' +
+                      username;
+              file = file.toLowerCase();
+          }
+          else
+              file='default';
+
+          return  '<a target="_blank" href="http://'+username+'.deviantart.com/">'+
+                  '<img alt="" src="https://a.deviantart.net/avatars/' +
+                  file + ext + cachebuster + '" alt="' +
+                  username +  '" title="' +
+                  username +  '" width="50" height="50" onload="this.removeAttribute(\'width\');this.removeAttribute(\'height\')"/></a>';
+      }
+      msg = msg.replace(/&avatar\t([^\t]+)\t([^\t]+)\t/g,printAvatar);
       // img
       msg = msg.replace(/&img\t([^\t]+)\t([^\t]*)\t([^\t]*)\t/g,'<img src="$1" />');
       msg = msg.replace(/&\/a\t/g,"</a>");

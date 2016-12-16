@@ -71,7 +71,7 @@ function Jester(){
     // Load Modules
     //
     modules.forEach(function(mod){
-      BOT.loadModule("./modules/"+mod);
+      BOT.loadModule("./modules/"+mod+".js");
     });
 
     //

@@ -291,21 +291,22 @@ body, html{
   width: 130px;
   overflow: auto;
   font-size: 0.85em;
-  padding: 10px 10px 0 10px;
+  padding: 0px 10px 0 10px;
 }
 .ChatMembers h2{
   font-size: 1em;
   margin: 0;
   padding: 5px 10px;
   background-color: #bccbba;
+  border-radius: 5px;
 }
 .ChatMembers ul{
   list-style: none;
   margin: 0;
-  padding: 10px 0 5px 0;
+  padding: 5px 0 5px 0;
 }
 .ChatMember{
-  padding: 0 5px 5px 10px;
+  padding: 0 5px 2px 10px;
 }
 .ChatMember a{
   text-decoration: none;

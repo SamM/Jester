@@ -138,6 +138,23 @@ window.ControlPanel = window.CP = new (function(){
       CP.render("chat");
     }
   }
+  this.dAmn.matchMembers = function(test){
+    var chan, members = [];
+    for(var ns in CP.channels){
+      chan = CP.channels[ns];
+      for(var username in chan.members){
+        if(members.indexOf(username)==-1)
+          members.push(username);
+      }
+    }
+    var found = [];
+    for(var i=0;i<members.length;i++){
+      if(-1 != members[i].search(test)){
+        found.push(members[i]);
+      }
+    }
+    return found;
+  };
   this.dAmn.recv = {};
   this.dAmn.recv.join = function(o){
     var ns = o.channel.toLowerCase();
@@ -838,20 +855,105 @@ var ChatInput = React.createClass({
   getInitialState: function(){
     return {value : ""};
   },
+  tablist: null,
+  tabindex: 0,
+  tabstart: 0,
+  history: [],
+  history_pos: 0,
+  history_tmp: "",
+  handleKey: function(e){
+    var el = e.target;
+    if(e.keyCode == 9){
+      //Tab key
+      if(this.tablist){
+        this.tabindex++;
+        this.tabindex%=this.tablist.length;
+        this.setState({value: el.value.substr(0, this.tabstart) + this.tablist[this.tabindex]})
+      }else{
+        this.tabstart = el.value.lastIndexOf(" ")+1;
+        var tabstr = el.value.substr(this.tabstart);
+        if(tabstr.length){
+          var list;
+          if(tabstr[0] == "/"){
+            // Search Commands
+          }else{
+            // Search Member Names
+            list = CP.dAmn.matchMembers(new RegExp("^"+tabstr+"\\S*", "i"))
+            if(0==this.tabstart){
+              var i = list.length;
+              while(i--){
+                list[i] += ": ";
+              }
+            }
+          }
+        }
+        list.sort();
+        if(list.length){
+          this.setState({value: el.value.substr(0, this.tabstart) + list[0]});
+          if(list.length > 1){
+            this.tablist = list;
+            this.tabindex = 0;
+          }
+        }
+      }
+      e.preventDefault();
+    }else{
+      this.tablist = null;
+      // hit up-arrow?
+      if (!e.shiftKey && e.keyCode == 38) {
+          if (this.history.length) {
+              if (this.history_pos == -1) {
+                  this.history_tmp = el.value;
+                  this.history_pos = this.history.length-1;
+              } else if (this.history_pos) {
+                  --this.history_pos;
+              }
+              this.setState({value: this.history[this.history_pos]});
+          }
+          e.preventDefault();
+      // hit down-arrow?
+      } else if (!e.shiftKey && e.keyCode == 40) {
+          // do nothing if not already scrolled into history
+          if( this.history_pos != -1 ){
+              ++this.history_pos;
+
+              if( this.history_pos == this.history.length )
+                  this.history_pos = -1;
+
+              if( this.history_pos == -1 )
+                  this.setState({value: this.history_tmp});
+              else
+                  this.setState({value: this.history[this.history_pos]});
+          }
+          e.preventDefault();
+      }
+    }
+  },
   handleChange: function(event){
     this.setState({value: event.target.value});
   },
   sendMessage: function(event){
     event.preventDefault();
+    this.history.push(this.state.value);
     BOT.send.parse(this.props.ns, this.state.value);
     this.setState({value: ""});
+  },
+  focusInput: function(){
+    var input = ReactDOM.findDOMNode(this.refs["chat_input"]);
+    input.focus();
+  },
+  componentDidMount: function() {
+    window.addEventListener("click", this.focusInput);
+  },
+  componentWillUnmount: function() {
+    window.removeEventListener("click", this.focusInput);
   },
   render: function(){
     var value = this.state.value;
     return (
       <div className="ChatInput">
         <form className="SendForm" onSubmit={this.sendMessage}>
-          <input type="text" className="TextInput" value={value} onChange={this.handleChange} tabIndex="1" />
+          <input type="text" className="TextInput" ref="chat_input" value={value} onChange={this.handleChange} onKeyDown={this.handleKey} tabIndex="1" />
         </form>
       </div>
     )
@@ -990,7 +1092,7 @@ ControlPanel.add_page("chat",{
   path: "/chat",
   component: ChatroomPage,
   route: function(ctx, next){
-    CP.data.current_channel = "ns:sumobot";
+    //CP.data.current_channel = "ns:sumobot";
     next();
   }
 });

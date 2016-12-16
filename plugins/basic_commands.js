@@ -152,7 +152,7 @@ module.exports = function(){
     function cmd(o){
       if(!plugin.enabled) return;
       if(BOT.checkAuth(o.from, 5)){
-        BOT.send.msg_to(o.channel, o.from, "Ok! BRB :D");
+        //BOT.send.msg_to(o.channel, o.from, "Ok! BRB :D");
         BOT.restart();
     	}
     }
