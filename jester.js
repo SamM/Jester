@@ -1,4 +1,5 @@
 var version = "0.1";
+var util = require("util");
 
 function Jester(){
   var BOT = this;
@@ -6,7 +7,10 @@ function Jester(){
   BOT.loadModule = function(path){
     try{
       require(path).call(BOT);
-    } catch(ex){ console.log("Error loading bot module '"+path+"': ",ex.stack.split("\n")); }
+    } catch(ex){
+      console.log("Error loading bot module '"+path+"': "+ex.current);
+      if(ex instanceof SyntaxError) throw ex;
+    }
   }
 
   this.init = function(){
@@ -38,7 +42,8 @@ function Jester(){
     var plugins = [
       "basic_commands",
       "antikick",
-      "nametrigger"
+      "nametrigger",
+      "mind"
       //"botcheck"
     ];
 

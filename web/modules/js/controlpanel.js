@@ -548,10 +548,10 @@ var ChatroomPage = React.createClass({
   render: function(){
     var channels = this.props.channels;
     var current_channel = this.props.data.current_channel;
-    if(!current_channel || !channels[current_channel]){
+    if(!current_channel || !channels[current_channel.toLowerCase()]){
       current_channel = Object.keys(channels)[0];
     }
-    if(!current_channel || !channels[current_channel].joined){
+    if(!current_channel || !channels[current_channel.toLowerCase()].joined){
       return (
         <EmptyChatroomPage data={this.props.data} />
       );
@@ -559,7 +559,7 @@ var ChatroomPage = React.createClass({
     return (
       <div className="ChatroomPage">
         <ChatTabs channels={channels} current_channel={current_channel} />
-        <Chatroom channel={channels[current_channel]} data={this.props.data} />
+        <Chatroom channel={channels[current_channel.toLowerCase()]} data={this.props.data} />
       </div>
     )
   }

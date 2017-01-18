@@ -132,7 +132,7 @@ module.exports = function(){
     fs.readdir(__dirname+"/../web/plugins/js", function(err, files){
       if(err){
         console.log("Error loading web plugin file list");
-        console.log(err);
+        console.error(err);
       }else{
         files.forEach(function(v){ o.babel_scripts.push("/modules/js/"+v); });
       }
@@ -148,7 +148,7 @@ module.exports = function(){
     fs.readdir(dir, function(err, files){
       if(err){
         console.log("Error loading web module stylesheet list");
-        console.log(err);
+        console.error(err);
       }else{
         files.forEach(function(v){ o.stylesheets.push("/modules/css/"+v); });
       }
@@ -164,7 +164,7 @@ module.exports = function(){
     fs.readdir(dir, function(err, files){
       if(err){
         console.log("Error loading web plugin stylesheet list");
-        console.log(err);
+        console.error(err);
       }else{
         files.forEach(function(v){ o.stylesheets.push("/plugins/css/"+v); });
       }

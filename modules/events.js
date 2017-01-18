@@ -21,7 +21,7 @@ module.exports = function(){
         prep[i++].call(self, o, preprocessing);
       }catch(ex){
         i++;
-        console.log(ex);
+        console.error(ex);
         preprocessing(o);
       }
       }
@@ -38,7 +38,7 @@ module.exports = function(){
           post[i++].call(self, o, postprocessing);
         }catch(ex){
           i++;
-          console.log(ex);
+          console.error(ex);
           postprocessing(o);
         }
       }

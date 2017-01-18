@@ -1,0 +1,27 @@
+<html>
+  <head>
+    <title>Test WordMatrix</title>
+    <script type="text/javascript" src="lib/WordMatrix.js"></script>
+
+</head>
+<body>
+  <script type="text/javascript">
+    var input = [
+      "Dogs hate cats",
+      "Sam is a person",
+      "Sam is a happy person",
+      "Sam is not scary. Sam is happy",
+      "Sam says: hello*I say: goodbye"
+    ];
+    var matrix = WordMatrix(input);
+    var isStrict = false,
+    depth = false;
+    console.log("is", WordMatrix.toSentences(WordMatrix.search(matrix, "is", isStrict, depth)));
+    console.log("is a", WordMatrix.toSentences(WordMatrix.search(matrix, "is a", isStrict, depth)));
+    console.log("is a person", WordMatrix.toSentences(WordMatrix.search(matrix, "is a person", isStrict, depth)));
+    console.log("Sam is happy", WordMatrix.toSentences(WordMatrix.search(matrix, "Sam is happy", isStrict, depth)));
+    console.log("Sam is a person", WordMatrix.toSentences(WordMatrix.search(matrix, "Sam is a person", isStrict, depth)));
+  </script>
+  WordMatrix.toSentences(WordMatrix.search(matrix, "", isStrict, depth))
+</body>
+</html>

@@ -55,7 +55,6 @@ module.exports = function(){
       for(var i=event_history.length-1; i >= 0; i--){
         e = event_history[i];
         if(e[0]=="chat.log" && filter_message_types.indexOf(e[1].msg.type) > -1){
-          console.log(e[1]);
           if(count < max_message_history){
             count++;
             history.unshift(e);

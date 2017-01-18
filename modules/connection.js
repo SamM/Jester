@@ -360,7 +360,8 @@ module.exports = function(){
       BOT.process('recv.msg', {channel: BOT.ns_(ns), from: from, text: content}, function(o,d){
         this.logMsg(o.channel, "<"+o.from+"> "+BOT.msgToText(o.text));
 				BOT.chat.msg(o.channel, o.from, BOT.msgToHtml(o.text));
-        var trig = BOT.config("trigger"), text = BOT.msgToText(o.text);
+				var color_tag = /<abbr title="[^"]*"><\/abbr>/gi;
+        var trig = BOT.config("trigger"), text = BOT.msgToText(o.text).replace(color_tag, "");
         if(text.indexOf(trig)==0){
           var params = text.slice(trig.length).split(" "),
             cmd = params.shift();

@@ -105,7 +105,7 @@ module.exports = function(){
     function cmd(o){
       if(!plugin.enabled) return;
       if(BOT.checkAuth(o.from, 2)){
-        if(o.params.length==1 && o.params[0]==""){
+        if(o.params.length==0){
           BOT.send.part(o.channel);
         }else{
           o.params.forEach(function(chan){
