@@ -42,8 +42,7 @@ function Jester(){
     var plugins = [
       "basic_commands",
       "antikick",
-      "nametrigger",
-      "mind"
+      "verbal_commands"
       //"botcheck"
     ];
 
