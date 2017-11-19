@@ -232,7 +232,7 @@ module.exports = function(){
     }catch(ex){}
     return msg;
   }
-  BOT.stripColorsTag = function(str){
+  this.stripColorsTag = function(str){
       return str.split(new RegExp('<abbr title="colors:[0-9A-Fa-f:]+"></abbr>')).join('');
   };
 }
